@@ -44,10 +44,6 @@ class BOT_DATA:
 
 
 
-
-
-
-
 '''
 https://codereview.stackexchange.com/questions/217065/calculate-levenshtein-distance-between-two-strings-in-python
 
@@ -119,6 +115,13 @@ def check(author, channel):
     def inner_check(message):
         return message.author == author and message.channel == channel
     return inner_check
+
+
+
+
+
+
+
 
 
 # client = commands.Bot(command_prefix = BOT_DATA.BOT_COMMAND_PREFIX)
@@ -249,12 +252,20 @@ async def on_message(message):
                 if list_page > len(paginated_faq_entries)-1:
                     list_page = 0
                 
-                for faq_entry in paginated_faq_entries[ list_page ]:
+                if len(paginated_faq_entries) < 1:
                     embed.add_field(
-                        name = ', '.join( faq_entry['tag'] ),
-                        value = faq_entry['title'],
+                        name = 'ERROR: No FAQs Found',
+                        value = '-',
                         inline = False
                     )
+                
+                else:
+                    for faq_entry in paginated_faq_entries[ list_page ]:
+                        embed.add_field(
+                            name = ', '.join( faq_entry['tag'] ),
+                            value = faq_entry['title'],
+                            inline = False
+                        )
                 
                 embed.set_footer(text=f'''\
 page {list_page+1} of {len(paginated_faq_entries)}
@@ -472,6 +483,14 @@ You can use '{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['lis
 
 
 
+
+
+if not os.path.exists( os.path.join( os.getcwd(), BOT_DATA.FAQ_DATA_FILENAME ) ):
+    dumpFaqFile(
+        {
+            "faq_data": [ ]
+        }
+    )
 
 
 
