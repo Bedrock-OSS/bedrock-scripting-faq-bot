@@ -158,10 +158,10 @@ def searchFaqByTag(faq_tag):
                 distance = 100 - fuzz.ratio( tag, faq_tag )
                 if distance < 75:
                     distances.append( [distance, faq] )
-            if faq_tag in faq['title']:
+            if faq_tag.replace('-',' ').lower() in faq['title'].lower():
                 contains_tag_in_title = faq
                 distances.append( [55, faq] )
-            if faq_tag in faq['info']:
+            if faq_tag.replace('-',' ').lower() in faq['info'].lower():
                 contains_tag_in_info = faq
                 distances.append( [65, faq] )
         
@@ -1078,6 +1078,8 @@ The FAQ '{faq_tag}' has not been deleted""",
 
     if message.content.startswith(BOT_DATA.FAQ_QUERY_PREFIX):
         # check that this message is a command, e.g: '!help'
+
+        print(f"[DEBUG] command (FAQ) called : {message.content}")
         
 
         
