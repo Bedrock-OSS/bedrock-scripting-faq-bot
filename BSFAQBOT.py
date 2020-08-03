@@ -42,10 +42,13 @@ class BOT_DATA:
     FAQ_MANAGEMENT_COMMANDS = {
         'list': ['list', 'all', 'faqs'],
         'add': ['add', 'create', 'new', 'make'],
-        'delete': ['delete', 'remove', 'incinerate', 'shred']
+        'delete': ['delete', 'remove', 'incinerate', 'shred'],
+        'edit': ['edit', 'change', 'modify']
     }
 
     PAGINATE_FAQ_LIST = 8
+
+    BLACKLISTED_TAGS = ['list']
 
 
 
@@ -92,6 +95,7 @@ def dumpFaqFile(faq):
 def addFaq(new_faq):
     '''Adds a FAQ to the faq data, and then dumps the faq data to the faq json file'''
     faq_data['faq_data'].append(new_faq)
+    faq_data['faq_data'] = sorted( faq_data['faq_data'], key=lambda faq: faq['title'] )
     dumpFaqFile(faq_data)
 
 def deleteFaq(faq_tag):
@@ -124,28 +128,27 @@ def searchFaqByTag(faq_tag):
         distances = []
         contains_tag_in_title = None
         contains_tag_in_info = None
+
+        print("Fuzzy matching:")
+
         for faq in faq_data['faq_data']:
-            distance = levenshtein_distance( faq['title'], faq_tag )
-            if distance < 12:
-                distances.append( [distance, faq] )
+            for tag in faq['tag']:
+                distance = levenshtein_distance( tag, faq_tag )
+                print( tag, faq_tag )
+                print( distance )
+                if distance < 5:
+                    distances.append( [distance, faq] )
             if faq_tag in faq['title']:
                 contains_tag_in_title = faq
             if faq_tag in faq['info']:
                 contains_tag_in_info = faq
-        sorted_distances = sorted( distances, key=lambda i: i[0], reverse=True )
+        
+        sorted_distances = sorted( distances, key=lambda i: i[0], reverse=False )
 
         if len(sorted_distances) > 0:
             return sorted_distances[0][1]
 
         return contains_tag_in_title or contains_tag_in_info or None
-
-        # if contains_tag_in_title != None:
-        #     return contains_tag_in_title
-
-        # if contains_tag_in_info != None:
-        #     return contains_tag_in_info
-
-        # return None
 
     return found[0]
 
@@ -157,7 +160,7 @@ flatten = lambda l: [item for sublist in l for item in sublist]
 def getValidAliases(aliases):
     '''Returns a list of all the aliases from the current list that aren't already part of other FAQs'''
     current_aliases = flatten( list( [f['tag'] for f in faq_data['faq_data']] ) )
-    v = list([a for a in aliases if not a in current_aliases])
+    v = list([a for a in aliases if (not a in current_aliases) and (not a in BOT_DATA.BLACKLISTED_TAGS)])
     return v
 
 def check(author, channel):
@@ -235,8 +238,8 @@ async def on_message(message):
                 )
 
                 embed.add_field(
-                    name = f'{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS["list"][0]} [page:int]',
-                    value = f'Displays a list of all FAQs, example: "{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS["list"][0]} 1"',
+                    name = f'{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS["list"][0]} [page:int]',
+                    value = f'Displays a list of all FAQs, example: "{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS["list"][0]} 1"',
                     inline = False
                 )
 
@@ -287,52 +290,6 @@ async def on_message(message):
 
 
 
-            if action in BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list']:
-                # list out all the FAQ tags and text
-
-                list_page = 1
-                if len(command_split) > 2:
-                    try: list_page = int(command_split[2])
-                    except: list_page = 1
-                list_page -= 1
-
-                embed = discord.Embed(
-                    title = 'All FAQ tags',
-                    description = '---',
-                    colour = discord.Colour.blue()
-                )
-
-                all_faq_entries = faq_data['faq_data']
-                paginated_faq_entries = paginate_list(all_faq_entries, BOT_DATA.PAGINATE_FAQ_LIST)
-
-                if list_page > len(paginated_faq_entries)-1:
-                    list_page = 0
-                
-                if len(paginated_faq_entries) < 1:
-                    embed.add_field(
-                        name = 'ERROR: No FAQs Found',
-                        value = '-',
-                        inline = False
-                    )
-                
-                else:
-                    for faq_entry in paginated_faq_entries[ list_page ]:
-                        embed.add_field(
-                            name = ', '.join( faq_entry['tag'] ),
-                            value = faq_entry['title'].title(),
-                            inline = False
-                        )
-                
-                embed.set_footer(text=f'''\
-page {list_page+1} of {len(paginated_faq_entries)}
-({len(all_faq_entries)} total faq entries)
-Use "{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]} [page]" to list a given page of FAQs''')
-
-                await channel.send(embed=embed)
-
-
-
-
 
 
             if BOT_DATA.FAQ_MANAGEMENT_ROLE in [role.name for role in roles]:
@@ -371,7 +328,7 @@ If you would like to retry, please re-type the command "{message.content}"''')
                     except:
                         await channel.send(f"""\
 **Invlaid use of the command. Make sure to specify FAQ tag(s)**
-Example use :'{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['add'][0]} tag name, alias 1, alias 2'""")
+Error reading FAQ tags, example: 'tag 1, tag 2'""")
                         return
                     
                     if len(valid_aliases) < 1:
@@ -441,6 +398,180 @@ If you would like to retry, please re-type the command "{message.content}"''')
 
 
 
+
+
+
+
+                if action in BOT_DATA.FAQ_MANAGEMENT_COMMANDS['edit']:
+                    # edit an existing FAQ
+
+                    await channel.send(f'''\
+**Please enter tag of FAQ you wish to edit**
+enter the FAQ's tag, or enter "x" to cancel''')
+
+                    try: faq_tags_reply = await client.wait_for('message', check=check(author, channel), timeout=120)
+                    except: faq_tags_reply = None
+
+                    if faq_tags_reply == None:
+                        await channel.send(f'''\
+**FAQ edit timed out**
+If you would like to retry, please re-type the command "{message.content}"''')
+                        return
+                    
+                    faq_tag_reply_content = faq_tags_reply.content
+
+                    if faq_tag_reply_content == 'x':
+                        # do nothing, since the user cancelled the FAQ editing
+                        await channel.send(f'''**Cancelled FAQ Editing**''')
+                        return
+
+                    search_for = faq_tag_reply_content
+
+                    if search_for == '':
+                        await channel.send(f"""\
+**Invlaid use of the command. Make sure to specify FAQ tag**
+Error reading FAQ tag, example: 'tag 1'""")
+                        return
+                    
+
+
+
+                    found_faq = searchFaqByTag(search_for)
+
+                    if found_faq == None:
+                        await channel.send(f"""\
+**No FAQ found with tag {search_for}**""")
+                        return
+
+
+
+                    await channel.send(f'''\
+**Found FAQ ({found_faq['title']})**
+Select an attribute of the FAQ to edit,
+valid attributes:
+_ - t: title_
+_ - ta: tags_
+_ - d: description_
+or type "x" to cancel''')
+
+
+                    try: faq_edit_attribute = await client.wait_for('message', check=check(author, channel), timeout=120)
+                    except: faq_edit_attribute = None
+
+                    if faq_edit_attribute == None:
+                        await channel.send(f'''\
+**Editing FAQ timed out**
+If you would like to retry, please re-type the command "{message.content}"''')
+                        return
+                    
+                    faq_edit_attribute_choice = faq_edit_attribute.content
+
+                    if faq_edit_attribute_choice == 'x':
+                        # do nothing, since the user cancelled the FAQ creation
+                        await channel.send(f'''**Cancelled FAQ Editing**''')
+                        return
+
+
+
+                    if faq_edit_attribute_choice in ['t', 'title']:
+                        await channel.send(f'''\
+**Editing FAQ**
+Please enter a new title for the FAQ, or enter "x" to cancel''')
+                        try:
+                            msgresp = await client.wait_for('message', check=check(author, channel), timeout=120)
+                            response = msgresp.content
+                        except:
+                            await channel.send(f'''\
+**Editing FAQ timed out**
+If you would like to retry, please re-type the command "{message.content}"''')
+                            return
+                        
+                        deleteFaq( found_faq['tag'][0] )
+                        found_faq['title'] = response
+                        addFaq(found_faq)
+
+                        await channel.send(f'''\
+**Editing FAQ**
+Edited FAQ title''')
+
+
+
+
+
+                    elif faq_edit_attribute_choice in ['ta', 'tags']:
+                        await channel.send(f'''\
+**Editing FAQ**
+Please enter the new tags for the FAQ, or enter "x" to cancel''')
+                        try:
+                            msgresp = await client.wait_for('message', check=check(author, channel), timeout=120)
+                            response = msgresp.content
+                        except:
+                            await channel.send(f'''\
+**Editing FAQ timed out**
+If you would like to retry, please re-type the command "{message.content}"''')
+                            return
+
+                        tags = list( [t.strip().replace(' ','-').lower() for t in response.split(',')] )
+
+                        if tags == []:
+                            await channel.send(f'''\
+**Invalid FAQ tags**
+You must enter one or more tags, example: "tag 1, tag 2"''')
+                            return
+                        
+                        deleteFaq( found_faq['tag'][0] )
+
+                        valid_tags = getValidAliases(tags)
+
+                        if len(valid_tags) == 0:
+                            await channel.send(f'''\
+**Invalid FAQ tags**
+All the tags you entered are already used in other FAQs, please use different tags''')
+                            return
+
+                        found_faq['tag'] = valid_tags
+                        addFaq(found_faq)
+
+                        await channel.send(f'''\
+**Editing FAQ**
+Edited FAQ tags''')
+
+
+
+
+                    elif faq_edit_attribute_choice in ['d', 'description']:
+                        await channel.send(f'''\
+**Editing FAQ**
+Please enter a new description for the FAQ, or enter "x" to cancel''')
+                        try:
+                            msgresp = await client.wait_for('message', check=check(author, channel), timeout=120)
+                            response = msgresp.content
+                        except:
+                            await channel.send(f'''\
+**Editing FAQ timed out**
+If you would like to retry, please re-type the command "{message.content}"''')
+                            return
+                        
+                        if response == '':
+                            await channel.send(f'''\
+**Invalid FAQ description**
+You cannot leave the description of a FAQ blank''')
+                            return
+                        
+                        deleteFaq( found_faq['tag'][0] )
+                        found_faq['info'] = response
+                        addFaq(found_faq)
+
+                        await channel.send(f'''\
+**Editing FAQ**
+Edited FAQ description''')
+
+
+                    
+
+
+
+
                     
 
                 if action in BOT_DATA.FAQ_MANAGEMENT_COMMANDS['delete']:
@@ -458,7 +589,7 @@ Example use :'{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['de
                     if findFaqByTag(faq_tag) == None:
                         await channel.send(f'''\
 **Invalid FAQ tag**
-There is no FAQ with the tag "{faq_tag}", use '{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to list out FAQs''')
+There is no FAQ with the tag "{faq_tag}", use '{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to list out FAQs''')
                         return
 
                     await channel.send(f"""\
@@ -509,6 +640,59 @@ The FAQ '{faq_tag}' has not been deleted""")
 
     if message.content.startswith(BOT_DATA.FAQ_QUERY_PREFIX):
         # check that this message is a command, e.g: '!help'
+        
+
+        
+        command_request = message.content.split( BOT_DATA.FAQ_QUERY_PREFIX, 1 )[-1]
+        command_split = command_request.split(' ')
+        main_command = command_split[0]
+    
+        if main_command in BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list']:
+            # list out all the FAQ tags and text
+
+            list_page = 1
+            if len(command_split) > 1:
+                try: list_page = int(command_split[1])
+                except: list_page = 1
+            list_page -= 1
+
+            embed = discord.Embed(
+                title = 'All FAQ tags',
+                description = '---',
+                colour = discord.Colour.blue()
+            )
+
+            all_faq_entries = faq_data['faq_data']
+            paginated_faq_entries = paginate_list(all_faq_entries, BOT_DATA.PAGINATE_FAQ_LIST)
+
+            if list_page > len(paginated_faq_entries)-1:
+                list_page = 0
+            
+            if len(paginated_faq_entries) < 1:
+                embed.add_field(
+                    name = 'ERROR: No FAQs Found',
+                    value = '-',
+                    inline = False
+                )
+            
+            else:
+                for faq_entry in paginated_faq_entries[ list_page ]:
+                    embed.add_field(
+                        name = ', '.join( faq_entry['tag'] ),
+                        value = faq_entry['title'].title(),
+                        inline = False
+                    )
+            
+            embed.set_footer(text=f'''\
+page {list_page+1} of {len(paginated_faq_entries)}
+({len(all_faq_entries)} total faq entries)
+Use "{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]} [page]" to list a given page of FAQs''')
+
+            await channel.send(embed=embed)
+
+            return
+
+
 
         try:
             faq_tag_searches = message.content.split( BOT_DATA.FAQ_QUERY_PREFIX, 1 )[-1].strip().replace(' ','-').lower()
@@ -522,15 +706,17 @@ The FAQ '{faq_tag}' has not been deleted""")
             await channel.send(f"""\
 **Invlaid use of the command. Make sure to specify FAQ tag(s)**
 Example use :'{BOT_DATA.FAQ_QUERY_PREFIX} some faq tag'
-You can also use '{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to see a list of all FAQs""")
+You can also use '{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to see a list of all FAQs""")
             return
+
+
 
         faq = searchFaqByTag( faq_tag_searches )
 
         if faq == None:
             await channel.send(f"""\
 **There is no FAQ with the tag {faq_tag_searches}**
-You can use '{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to see a list of all FAQs""")
+You can use '{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to see a list of all FAQs""")
             return
 
         embed = discord.Embed(
