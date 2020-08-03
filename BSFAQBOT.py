@@ -19,6 +19,7 @@ class BOT_DATA:
 
 
     FAQ_DATA_FILENAME = 'faq.json'
+    FAQ_DATA_FILENAME_BIN = 'faq_bin.json'
 
 
 
@@ -90,6 +91,15 @@ def addFaq(new_faq):
 def deleteFaq(faq_tag):
     '''Delete a FAQ from the faq data, and then dumps the faq data to the faq json file'''
     faq = findFaqByTag(faq_tag)
+
+    
+    if not os.path.exists( os.path.join( os.getcwd(), BOT_DATA.FAQ_DATA_FILENAME_BIN ) ):
+        open(os.path.join( os.getcwd(), BOT_DATA.FAQ_DATA_FILENAME_BIN ), 'w').write( json.dumps([],indent=4) )
+    
+    backup = json.load( open(os.path.join( os.getcwd(), BOT_DATA.FAQ_DATA_FILENAME_BIN ), 'r') )
+    backup.append(faq)
+    open(os.path.join( os.getcwd(), BOT_DATA.FAQ_DATA_FILENAME_BIN ), 'w').write( json.dumps(backup,indent=4) )
+
     faq_data['faq_data'].remove(faq)
     dumpFaqFile(faq_data)
 
@@ -469,7 +479,7 @@ You can use '{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['lis
             return
 
         embed = discord.Embed(
-            title = f'FAQ: {faq["title"]}',
+            title = f'{faq["title"]}',
             description = faq["info"],
             colour = discord.Colour.blue()
         )
@@ -486,6 +496,7 @@ You can use '{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['lis
 
 
 if not os.path.exists( os.path.join( os.getcwd(), BOT_DATA.FAQ_DATA_FILENAME ) ):
+    print("[DEBUG] making empty faq file, since faq file is missing")
     dumpFaqFile(
         {
             "faq_data": [ ]
