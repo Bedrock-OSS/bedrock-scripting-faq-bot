@@ -153,19 +153,17 @@ def searchFaqByTag(faq_tag):
         contains_tag_in_title = None
         contains_tag_in_info = None
 
-        # print("Fuzzy matching:")
-
         for faq in faq_data['faq_data']:
             for tag in faq['tag']:
                 distance = 100 - fuzz.ratio( tag, faq_tag )
-                # print( tag, faq_tag )
-                # print( distance )
-                if distance < 85:
+                if distance < 75:
                     distances.append( [distance, faq] )
             if faq_tag in faq['title']:
                 contains_tag_in_title = faq
+                distances.append( [55, faq] )
             if faq_tag in faq['info']:
                 contains_tag_in_info = faq
+                distances.append( [65, faq] )
         
         sorted_distances = sorted( distances, key=lambda i: i[0], reverse=False )
 
@@ -208,8 +206,7 @@ client = discord.Client()
 @client.event
 async def on_ready():
     print(f"Logged into discord as {client}")
-
-
+    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"the chat .. {BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.COMMAND_PREFIXES['help']}"))
 
 @client.event
 async def on_message(message):
@@ -255,11 +252,16 @@ async def on_message(message):
                 '''
                 the user wants to report a bug, but bug reports are turned off
                 '''
-                await channel.send(f'''\
+                embed = discord.Embed(
+                    title = '',
+                    description = f'''\
 **Bug report response**
 Bug reports have been disabled, either temporarily or permanently
 If you still need to submit a bug,
-DM @MACHINE_BUILDER#2245 or @SirLich#1658''')
+DM @MACHINE_BUILDER#2245 or @SirLich#1658''',
+                    colour = discord.Colour.red()
+                )
+                await channel.send(embed=embed)
 
             if main_command == BOT_DATA.COMMAND_PREFIXES['bug'] and CONFIG['allow_bug_reports']:
                 '''
@@ -272,61 +274,90 @@ DM @MACHINE_BUILDER#2245 or @SirLich#1658''')
 
                 if last_created_bug_report+CONFIG['bug_report_cooldown'] > time.time():
                     # time delay is in-place
-                    await channel.send(f'''\
+                    embed = discord.Embed(
+                        title = '',
+                        description = f'''\
 **Bug report response**
-You have submitted a bug report too recently. Please wait a while before attempting to submit another report''')
+You have submitted a bug report too recently. Please wait a while before attempting to submit another report''',
+                        colour = discord.Colour.red()
+                    )
+                    await channel.send(embed=embed)
                     return
 
-                await channel.send(f'''\
+                embed = discord.Embed(
+                    title = '',
+                    description = f'''\
 **Please enter bug report**
 Make sure to keep the bug report as descriptive, and as concise as possible
 Size constraints of bug report {report_size[0]}-{report_size[1]}
 **Do not spam this command or you may be punished**
-or type "x" to cancel''')
+or type "x" to cancel''',
+                    colour = discord.Colour.blue()
+                )
+                await channel.send(embed=embed)
 
                 try: bug_report_reply = await client.wait_for('message', check=check(author, channel), timeout=300)
                 except: bug_report_reply = None
 
                 if bug_report_reply == None:
-                    await channel.send(f'''\
+                    embed = discord.Embed(
+                        title = '',
+                        description = f'''\
 **Creation of bug report timed out**
-If you would like to retry, please re-type the command "{message.content}"''')
+If you would like to retry, please re-type the command "{message.content}"''',
+                        colour = discord.Colour.red()
+                    )
+                    await channel.send(embed=embed)
                     return
                 
                 bug_report = bug_report_reply.content
                 
                 if bug_report == 'x':
-                    await channel.send(f'''\
-**Creation of bug report timed out**
-Cancelled bug report''')
+                    embed = discord.Embed(
+                        title = '',
+                        description = f'''\
+**cancelled creation of bug report**''',
+                        colour = discord.Colour.red()
+                    )
+                    await channel.send(embed=embed)
                     return
 
                 if len(bug_report) < report_size[0] or len(bug_report) > report_size[1]:
-                    await channel.send(f'''\
+                    embed = discord.Embed(
+                        title = '',
+                        description = f'''\
 **Bug report response**
-Your bug report is not within the size constraints of {report_size[0]}-{report_size[1]}''')
+Your bug report is not within the size constraints of {report_size[0]}-{report_size[1]}''',
+                        colour = discord.Colour.red()
+                    )
+                    await channel.send(embed=embed)
                     return
 
-                embed = discord.Embed(
+                embed_report = discord.Embed(
                     title = 'FAQ Bot Bug Report',
                     description = f'Bug Report Created By **@{author.name}#{author.discriminator}** at **{datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d %H:%M:%S")}**',
                     colour = discord.Colour.blue()
                 )
 
-                embed.add_field(
-                    name = f'Report Content',
+                embed_report.add_field(
+                    name = f'Report Content ( From : [{channel.guild.name} - #{channel.name}] )',
                     value = bug_report,
                     inline = False
                 )
                 
                 BUG_REPORTS_BY_USERS[author.id] = time.time()
 
-                await channel.send(f'''\
+                embed = discord.Embed(
+                    title = '',
+                    description = f'''\
 **Bug report response**
-Your bug report has been submitted''')
+Your bug report has been submitted''',
+                    colour = discord.Colour.green()
+                )
+                await channel.send(embed=embed)
 
                 bug_report_channel = client.get_channel(BOT_DATA.BUG_REPORT_CHANNEL_ID)
-                await bug_report_channel.send(embed=embed)
+                await bug_report_channel.send(embed=embed_report)
 
 
 
@@ -442,10 +473,15 @@ Your bug report has been submitted''')
 
                 if action in BOT_DATA.FAQ_MANAGEMENT_COMMANDS['bug-report-enabled']:
                     if len(command_split) != 2:
-                        await channel.send(f'''\
-**Invlaid use of the command**
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''\
+**Invalid use of the command**
 Make sure to specify true or false in your argument
-Example: {BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['bug-report-enabled'][0]} false''')
+Example: {BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['bug-report-enabled'][0]} false''',
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
 
                     trueFalse = command_split[1].lower() == 'true'
@@ -453,26 +489,44 @@ Example: {BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['bug-rep
                     dumpConfig()
 
                     if trueFalse:
-                        await channel.send(f'''\
-**Enabled bug reporting**''')
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''**Enabled bug reporting**''',
+                            colour = discord.Colour.green()
+                        )
+                        await channel.send(embed=embed)
                     else:
-                        await channel.send(f'''\
-**Disabled bug reporting**''')
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''**Disabled bug reporting**''',
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
 
                 if action in BOT_DATA.FAQ_MANAGEMENT_COMMANDS["bug-report-cooldown"]:
                     if len(command_split) != 2:
-                        await channel.send(f'''\
-**Invlaid use of the command**
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''\
+**Invalid use of the command**
 Make sure to specify the delay in your argument
-Example: {BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['bug-report-cooldown'][0]} 300''')
+Example: {BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['bug-report-cooldown'][0]} 300''',
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
 
                     newDelay = int(command_split[1])
                     CONFIG['bug_report_cooldown'] = newDelay
                     dumpConfig()
 
-                    await channel.send(f'''\
-**Set bug reporting delay to {newDelay} seconds**''')
+                    embed = discord.Embed(
+                        title = '',
+                        description = f'''\
+**Set bug reporting delay to {newDelay} seconds**''',
+                        colour = discord.Colour.green()
+                    )
+                    await channel.send(embed=embed)
 
 
 
@@ -496,24 +550,39 @@ Example: {BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['bug-rep
                 if action in BOT_DATA.FAQ_MANAGEMENT_COMMANDS['add']:
                     # add a FAQ
 
-                    await channel.send(f'''\
+                    embed = discord.Embed(
+                        title = '',
+                        description = f'''\
 **Please enter FAQ tags**
-example : tag 1, tag 2, some other tag, or enter "x" to cancel''')
+example : tag 1, tag 2, some other tag, or enter "x" to cancel''',
+                        colour = discord.Colour.blue()
+                    )
+                    await channel.send(embed=embed)
 
                     try: faq_tags_reply = await client.wait_for('message', check=check(author, channel), timeout=120)
                     except: faq_tags_reply = None
 
                     if faq_tags_reply == None:
-                        await channel.send(f'''\
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''\
 **Creation of new FAQ timed out**
-If you would like to retry, please re-type the command "{message.content}"''')
+If you would like to retry, please re-type the command "{message.content}"''',
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
                     
                     faq_tags_reply_content = faq_tags_reply.content
 
                     if faq_tags_reply_content == 'x':
                         # do nothing, since the user cancelled the FAQ creation
-                        await channel.send(f'''**Cancelled FAQ Creation**''')
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''**Cancelled FAQ Creation**''',
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
 
                     try:
@@ -524,57 +593,97 @@ If you would like to retry, please re-type the command "{message.content}"''')
                         valid_aliases = getValidAliases(aliases_list)
 
                     except:
-                        await channel.send(f"""\
-**Invlaid use of the command. Make sure to specify FAQ tag(s)**
-Error reading FAQ tags, example: 'tag 1, tag 2'""")
+                        embed = discord.Embed(
+                            title = '',
+                            description = f"""\
+**Invalid use of the command. Make sure to specify FAQ tag(s)**
+Error reading FAQ tags, example: 'tag 1, tag 2'""",
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
                     
                     if len(valid_aliases) < 1:
-                        await channel.send(f'''\
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''\
 **Invalid FAQ tags**
-Every tag you listed is already in use by other FAQs''')
+Every tag you listed is already in use by other FAQs''',
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
 
-                    await channel.send(f'''\
+                    embed = discord.Embed(
+                        title = '',
+                        description = f'''\
 **Creating a new FAQ with the tags [{ ', '.join(valid_aliases) }]**
-Please enter the FAQ Title, or type "x" to cancel''')
+Please enter the FAQ Title, or type "x" to cancel''',
+                        colour = discord.Colour.blue()
+                    )
+                    await channel.send(embed=embed)
 
                     try: faq_title_reply = await client.wait_for('message', check=check(author, channel), timeout=120)
                     except: faq_title_reply = None
 
                     if faq_title_reply == None:
-                        await channel.send(f'''\
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''\
 **Creation of new FAQ timed out**
-If you would like to retry, please re-type the command "{message.content}"''')
+If you would like to retry, please re-type the command "{message.content}"''',
+                            colour = discord.Colour.blue()
+                        )
+                        await channel.send(embed=embed)
                         return
                     
                     faq_title_reply_content = faq_title_reply.content
 
                     if faq_title_reply_content == 'x':
                         # do nothing, since the user cancelled the FAQ creation
-                        await channel.send(f'''**Cancelled FAQ Creation**''')
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''**Cancelled FAQ Creation**''',
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
                     
                     # faq_title_reply_content is the new FAQ's title
 
-                    await channel.send(f'''\
+                    embed = discord.Embed(
+                        title = '',
+                        description = f'''\
 **Set the FAQ's title to {faq_title_reply_content}**
-Please enter the FAQ Description, and include any relative links, or type "x" to cancel''')
+Please enter the FAQ Description, and include any relative links, or type "x" to cancel''',
+                        colour = discord.Colour.blue()
+                    )
+                    await channel.send(embed=embed)
 
                     try: faq_description_reply = await client.wait_for('message', check=check(author, channel), timeout=300)
                     except: faq_description_reply = None
 
                     if faq_description_reply == None:
-                        await channel.send(f'''\
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''\
 **Setting FAQ description timed out**
-If you would like to retry, please re-type the command "{message.content}"''')
+If you would like to retry, please re-type the command "{message.content}"''',
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
                     
                     faq_description = faq_description_reply.content
 
                     if faq_description == 'x':
                         # do nothing, since the user cancelled setting the FAQ description
-                        await channel.send(f'''**Cancelled FAQ Creation**''')
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''**Cancelled FAQ Creation**''',
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
                     
                     # faq_description is the new FAQ's description
@@ -588,11 +697,22 @@ If you would like to retry, please re-type the command "{message.content}"''')
 
                         addFaq(new_faq)
 
-                        await channel.send(f'''\
-**Successfully created a new FAQ**''')
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''\
+**Successfully created a new FAQ**''',
+                            colour = discord.Colour.green()
+                        )
+                        await channel.send(embed=embed)
+
                     except:
-                        await channel.send(f'''\
-**ERROR trying to create FAQ**''')
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''\
+**Error while trying to create new FAQ**''',
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
 
 
 
@@ -603,118 +723,187 @@ If you would like to retry, please re-type the command "{message.content}"''')
                 if action in BOT_DATA.FAQ_MANAGEMENT_COMMANDS['edit']:
                     # edit an existing FAQ
 
-                    await channel.send(f'''\
+                    embed = discord.Embed(
+                        title = '',
+                        description = f'''\
 **Please enter tag of FAQ you wish to edit**
-enter the FAQ's tag, or enter "x" to cancel''')
+enter the FAQ's tag, or enter "x" to cancel''',
+                        colour = discord.Colour.blue()
+                    )
+                    await channel.send(embed=embed)
 
                     try: faq_tags_reply = await client.wait_for('message', check=check(author, channel), timeout=120)
                     except: faq_tags_reply = None
 
                     if faq_tags_reply == None:
-                        await channel.send(f'''\
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''\
 **FAQ edit timed out**
-If you would like to retry, please re-type the command "{message.content}"''')
+If you would like to retry, please re-type the command "{message.content}"''',
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
                     
                     faq_tag_reply_content = faq_tags_reply.content
 
                     if faq_tag_reply_content == 'x':
                         # do nothing, since the user cancelled the FAQ editing
-                        await channel.send(f'''**Cancelled FAQ Editing**''')
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''**Cancelled FAQ Editing**''',
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
 
                     search_for = faq_tag_reply_content
 
                     if search_for == '':
-                        await channel.send(f"""\
-**Invlaid use of the command. Make sure to specify FAQ tag**
-Error reading FAQ tag, example: 'tag 1'""")
+                        embed = discord.Embed(
+                            title = '',
+                            description = f"""\
+**Invalid use of the command. Make sure to specify FAQ tag**
+Error reading FAQ tag, example: 'tag 1'""",
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
                     
-
 
 
                     found_faq = searchFaqByTag(search_for)
 
                     if found_faq == None:
-                        await channel.send(f"""\
-**No FAQ found with tag {search_for}**""")
+                        embed = discord.Embed(
+                            title = '',
+                            description = f"""\
+**No FAQ found with tag {search_for}**""",
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
 
 
 
-                    await channel.send(f'''\
+                    embed = discord.Embed(
+                        title = '',
+                        description = f'''\
 **Found FAQ ({found_faq['title']})**
 Select an attribute of the FAQ to edit,
 valid attributes:
 _ - t: title_
 _ - ta: tags_
 _ - d: description_
-or type "x" to cancel''')
+or type "x" to cancel''',
+                        colour = discord.Colour.blue()
+                    )
+                    await channel.send(embed=embed)
 
 
                     try: faq_edit_attribute = await client.wait_for('message', check=check(author, channel), timeout=120)
                     except: faq_edit_attribute = None
 
                     if faq_edit_attribute == None:
-                        await channel.send(f'''\
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''\
 **Editing FAQ timed out**
-If you would like to retry, please re-type the command "{message.content}"''')
+If you would like to retry, please re-type the command "{message.content}"''',
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
                     
                     faq_edit_attribute_choice = faq_edit_attribute.content
 
                     if faq_edit_attribute_choice == 'x':
                         # do nothing, since the user cancelled the FAQ creation
-                        await channel.send(f'''**Cancelled FAQ Editing**''')
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''**Cancelled FAQ Editing**''',
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
 
 
 
                     if faq_edit_attribute_choice in ['t', 'title']:
-                        await channel.send(f'''\
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''\
 **Editing FAQ**
-Please enter a new title for the FAQ, or enter "x" to cancel''')
+Please enter a new title for the FAQ, or enter "x" to cancel''',
+                            colour = discord.Colour.blue()
+                        )
+                        await channel.send(embed=embed)
                         try:
                             msgresp = await client.wait_for('message', check=check(author, channel), timeout=120)
                             response = msgresp.content
                         except:
-                            await channel.send(f'''\
-**Editing FAQ timed out**
-If you would like to retry, please re-type the command "{message.content}"''')
+                            embed = discord.Embed(
+                                title = '',
+                                description = f'''\
+**FAQ edit timed out**
+If you would like to retry, please re-type the command "{message.content}"''',
+                                colour = discord.Colour.red()
+                            )
+                            await channel.send(embed=embed)
                             return
                         
                         deleteFaq( found_faq['tag'][0] )
                         found_faq['title'] = response
                         addFaq(found_faq)
 
-                        await channel.send(f'''\
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''\
 **Editing FAQ**
-Edited FAQ title''')
+Edited FAQ title''',
+                            colour = discord.Colour.green()
+                        )
+                        await channel.send(embed=embed)
 
 
 
 
 
                     elif faq_edit_attribute_choice in ['ta', 'tags']:
-                        await channel.send(f'''\
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''\
 **Editing FAQ**
-Please enter the new tags for the FAQ, or enter "x" to cancel''')
+Please enter the new tags for the FAQ, or enter "x" to cancel''',
+                            colour = discord.Colour.blue()
+                        )
+                        await channel.send(embed=embed)
                         try:
                             msgresp = await client.wait_for('message', check=check(author, channel), timeout=120)
                             response = msgresp.content
                         except:
-                            await channel.send(f'''\
+                            embed = discord.Embed(
+                                title = '',
+                                description = f'''\
 **Editing FAQ timed out**
-If you would like to retry, please re-type the command "{message.content}"''')
+If you would like to retry, please re-type the command "{message.content}"''',
+                                colour = discord.Colour.red()
+                            )
+                            await channel.send(embed=embed)
                             return
 
                         tags = list( [t.strip().replace(' ','-').lower() for t in response.split(',')] )
 
                         if tags == []:
-                            await channel.send(f'''\
+                            embed = discord.Embed(
+                                title = '',
+                                description = f'''\
 **Invalid FAQ tags**
-You must enter one or more tags, example: "tag 1, tag 2"''')
+You must enter one or more tags, example: "tag 1, tag 2"''',
+                                colour = discord.Colour.red()
+                            )
+                            await channel.send(embed=embed)
                             return
                         
                         deleteFaq( found_faq['tag'][0] )
@@ -722,47 +911,77 @@ You must enter one or more tags, example: "tag 1, tag 2"''')
                         valid_tags = getValidAliases(tags)
 
                         if len(valid_tags) == 0:
-                            await channel.send(f'''\
+                            embed = discord.Embed(
+                                title = '',
+                                description = f'''\
 **Invalid FAQ tags**
-All the tags you entered are already used in other FAQs, please use different tags''')
+All the tags you entered are already used in other FAQs, please use different tags''',
+                                colour = discord.Colour.red()
+                            )
+                            await channel.send(embed=embed)
                             return
 
                         found_faq['tag'] = valid_tags
                         addFaq(found_faq)
 
-                        await channel.send(f'''\
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''\
 **Editing FAQ**
-Edited FAQ tags''')
+Edited FAQ tags''',
+                            colour = discord.Colour.green()
+                        )
+                        await channel.send(embed=embed)
 
 
 
 
                     elif faq_edit_attribute_choice in ['d', 'description']:
-                        await channel.send(f'''\
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''\
 **Editing FAQ**
-Please enter a new description for the FAQ, or enter "x" to cancel''')
+Please enter a new description for the FAQ, or enter "x" to cancel''',
+                            colour = discord.Colour.blue()
+                        )
+                        await channel.send(embed=embed)
                         try:
                             msgresp = await client.wait_for('message', check=check(author, channel), timeout=120)
                             response = msgresp.content
                         except:
-                            await channel.send(f'''\
+                            embed = discord.Embed(
+                                title = '',
+                                description = f'''\
 **Editing FAQ timed out**
-If you would like to retry, please re-type the command "{message.content}"''')
+If you would like to retry, please re-type the command "{message.content}"''',
+                                colour = discord.Colour.red()
+                            )
+                            await channel.send(embed=embed)
                             return
                         
                         if response == '':
-                            await channel.send(f'''\
+                            embed = discord.Embed(
+                                title = '',
+                                description =f'''\
 **Invalid FAQ description**
-You cannot leave the description of a FAQ blank''')
+You cannot leave the description of a FAQ blank''',
+                                colour = discord.Colour.red()
+                            )
+                            await channel.send(embed=embed)
                             return
                         
                         deleteFaq( found_faq['tag'][0] )
                         found_faq['info'] = response
                         addFaq(found_faq)
 
-                        await channel.send(f'''\
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''\
 **Editing FAQ**
-Edited FAQ description''')
+Edited FAQ description''',
+                            colour = discord.Colour.green()
+                        )
+                        await channel.send(embed=embed)
 
 
                     
@@ -779,43 +998,72 @@ Edited FAQ description''')
                         faq_tag = ' '.join( command_split[1:len(command_split)] ).strip().replace(' ','-').lower()
                         assert faq_tag != ''
                     except:
-                        await channel.send(f"""\
-**Invlaid use of the command. Make sure to specify a FAQ tag**
-Example use :'{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['delete'][0]} faq tag'""")
+                        embed = discord.Embed(
+                            title = '',
+                            description = f"""\
+**Invalid use of the command. Make sure to specify a FAQ tag**
+Example use : '{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['delete'][0]} faq tag'""",
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
                     
                     if findFaqByTag(faq_tag) == None:
-                        await channel.send(f'''\
+                        embed = discord.Embed(
+                            title = '',
+                            description = f'''\
 **Invalid FAQ tag**
-There is no FAQ with the tag "{faq_tag}", use '{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to list out FAQs''')
+There is no FAQ with the tag "{faq_tag}", use '{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to list out FAQs''',
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
 
-                    await channel.send(f"""\
+                    embed = discord.Embed(
+                        title = '',
+                        description = f"""\
 **Found FAQ**
 Are you sure you wish to delete this FAQ? Deleting a FAQ is permenant
 To confirm, the FAQ you are about to delete is titled **{findFaqByTag(faq_tag)['title']}**
-Type yes to continue, or anything else to cancel""")
+Type yes to continue, or anything else to cancel""",
+                        colour = discord.Colour.blue()
+                    )
+                    await channel.send(embed=embed)
 
                     try: faq_delete_reply = await client.wait_for('message', check=check(author, channel), timeout=25)
                     except: faq_delete_reply = None
 
                     if faq_delete_reply == None:
                         # do nothing, since the user cancelled deleting the FAQ
-                        await channel.send(f"""\
+                        embed = discord.Embed(
+                            title = '',
+                            description = f"""\
 **FAQ deletion timed out**
 FAQ delete confirmation message timed out
-If you would like to retry, please re-type the command \"{message.content}\"""")
+If you would like to retry, please re-type the command \"{message.content}\"""",
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
                         return
                     
                     if faq_delete_reply.content == 'yes':
                         # delete the FAQ
                         deleteFaq(faq_tag)
-                        await channel.send(f"""\
-**FAQ has been deleted**""")
+                        embed = discord.Embed(
+                            title = '',
+                            description = f"""**FAQ has been deleted**""",
+                            colour = discord.Colour.green()
+                        )
+                        await channel.send(embed=embed)
                     else:
-                        await channel.send(f"""\
+                        embed = discord.Embed(
+                            title = '',
+                            description = f"""\
 **FAQ deletion cancelled**
-The FAQ '{faq_tag}' has not been deleted""")
+The FAQ '{faq_tag}' has not been deleted""",
+                            colour = discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
 
 
 
@@ -893,10 +1141,15 @@ Use "{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]} [p
             faq_tag_searches = None
     
         if faq_tag_searches == None:
-            await channel.send(f"""\
-**Invlaid use of the command. Make sure to specify FAQ tag(s)**
+            embed = discord.Embed(
+                title = '',
+                description = f"""\
+**Invalid use of the command. Make sure to specify FAQ tag(s)**
 Example use :'{BOT_DATA.FAQ_QUERY_PREFIX} some faq tag'
-You can also use '{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to see a list of all FAQs""")
+You can also use '{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to see a list of all FAQs""",
+                colour = discord.Colour.red()
+            )
+            await channel.send(embed=embed)
             return
 
 
@@ -904,9 +1157,14 @@ You can also use '{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['
         faq = searchFaqByTag( faq_tag_searches )
 
         if faq == None:
-            await channel.send(f"""\
-**There is no FAQ with the tag {faq_tag_searches}**
-You can use '{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to see a list of all FAQs""")
+            embed = discord.Embed(
+                title = '',
+                description = f"""\
+**No FAQs could be found when searching for "{faq_tag_searches}"**
+You can use '{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to see a list of all FAQs""",
+                colour = discord.Colour.red()
+            )
+            await channel.send(embed=embed)
             return
 
         embed = discord.Embed(
