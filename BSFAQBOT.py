@@ -1,8 +1,14 @@
+import json
+import os
+
 import discord
 from discord.ext import commands
+from Levenshtein import distance as levenshtein_distance
+
 # was going to use the commands lib, but personally I find it easier to use the discord.Client() instead
 
-import json, os
+
+
 
 
 
@@ -35,8 +41,8 @@ class BOT_DATA:
 
     FAQ_MANAGEMENT_COMMANDS = {
         'list': ['list', 'all', 'faqs'],
-        'add': ['add', 'create'],
-        'delete': ['delete', 'remove', 'incinerate']
+        'add': ['add', 'create', 'new', 'make'],
+        'delete': ['delete', 'remove', 'incinerate', 'shred']
     }
 
     PAGINATE_FAQ_LIST = 8
@@ -107,6 +113,40 @@ def findFaqByTag(faq_tag):
     '''Returns the faq found by tag, if no FAQ exists, returns None'''
     found = list( [ x for x in faq_data['faq_data'] if faq_tag in x['tag'] ] )
     if len(found) == 0: return None
+    return found[0]
+
+def searchFaqByTag(faq_tag):
+    '''Returns the faq found by tag, otherwise tries to search for FAQ, otherwise returns None'''
+    found = list( [ x for x in faq_data['faq_data'] if faq_tag in x['tag'] ] )
+    if len(found) == 0:
+        # if no FAQ was found, search for it by looking through titles
+
+        distances = []
+        contains_tag_in_title = None
+        contains_tag_in_info = None
+        for faq in faq_data['faq_data']:
+            distance = levenshtein_distance( faq['title'], faq_tag )
+            if distance < 12:
+                distances.append( [distance, faq] )
+            if faq_tag in faq['title']:
+                contains_tag_in_title = faq
+            if faq_tag in faq['info']:
+                contains_tag_in_info = faq
+        sorted_distances = sorted( distances, key=lambda i: i[0], reverse=True )
+
+        if len(sorted_distances) > 0:
+            return sorted_distances[0][1]
+
+        return contains_tag_in_title or contains_tag_in_info or None
+
+        # if contains_tag_in_title != None:
+        #     return contains_tag_in_title
+
+        # if contains_tag_in_info != None:
+        #     return contains_tag_in_info
+
+        # return None
+
     return found[0]
 
 '''
@@ -189,14 +229,20 @@ async def on_message(message):
                 )
 
                 embed.add_field(
-                    name = f'{BOT_DATA.BOT_COMMAND_PREFIX}help',
+                    name = f'{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.COMMAND_PREFIXES["help"]}',
                     value = 'Displays the bot\'s help menu',
                     inline = False
                 )
 
                 embed.add_field(
+                    name = f'{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS["list"][0]} [page:int]',
+                    value = f'Displays a list of all FAQs, example: "{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS["list"][0]} 1"',
+                    inline = False
+                )
+
+                embed.add_field(
                     name = f'{BOT_DATA.FAQ_QUERY_PREFIX} [tag]',
-                    value = 'Displays the FAQ with the given tag or alias, along with its answer',
+                    value = f'Displays the FAQ with the given tag or alias, along with its answer, example: "{BOT_DATA.FAQ_QUERY_PREFIX} some faq"',
                     inline = False
                 )
 
@@ -207,14 +253,14 @@ async def on_message(message):
                         if BOT_DATA.FAQ_MANAGEMENT_ROLE in [role.name for role in roles]:
 
                             embed.add_field(
-                                name = f'{BOT_DATA.BOT_COMMAND_PREFIX}fm',
-                                value = 'The bot\'s FAQ management commands',
+                                name = f'{BOT_DATA.BOT_COMMAND_PREFIX}{"/".join(BOT_DATA.FAQ_MANAGEMENT_COMMANDS["add"])}',
+                                value = 'Create a new FAQ',
                                 inline = False
                             )
 
                             embed.add_field(
-                                name = f'{BOT_DATA.BOT_COMMAND_PREFIX}fm list',
-                                value = 'Lists all FAQ tags',
+                                name = f'{BOT_DATA.BOT_COMMAND_PREFIX}{"/".join(BOT_DATA.FAQ_MANAGEMENT_COMMANDS["delete"])} [faq tag]',
+                                value = 'Delete a FAQ',
                                 inline = False
                             )
 
@@ -234,7 +280,7 @@ async def on_message(message):
 
             action = main_command
 
-            print(action)
+            # print(action)
 
 
 
@@ -273,14 +319,14 @@ async def on_message(message):
                     for faq_entry in paginated_faq_entries[ list_page ]:
                         embed.add_field(
                             name = ', '.join( faq_entry['tag'] ),
-                            value = faq_entry['title'],
+                            value = faq_entry['title'].title(),
                             inline = False
                         )
                 
                 embed.set_footer(text=f'''\
 page {list_page+1} of {len(paginated_faq_entries)}
 ({len(all_faq_entries)} total faq entries)
-Use "{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.COMMAND_PREFIXES['faq_management']} {BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list']} [page]" to list a given page of FAQs''')
+Use "{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]} [page]" to list a given page of FAQs''')
 
                 await channel.send(embed=embed)
 
@@ -290,14 +336,14 @@ Use "{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.COMMAND_PREFIXES['faq_management']} 
 
 
             if BOT_DATA.FAQ_MANAGEMENT_ROLE in [role.name for role in roles]:
-                print("[DEBUG] caller has adequate privellages to use !fm commands this this command")                    
+                # print("[DEBUG] caller has adequate privellages to use !fm commands this this command")
 
                 if action in BOT_DATA.FAQ_MANAGEMENT_COMMANDS['add']:
                     # add a FAQ
 
                     await channel.send(f'''\
 **Please enter FAQ tags**
-example : tag 1, tag 2, some other tag''')
+example : tag 1, tag 2, some other tag, or enter "x" to cancel''')
 
                     try: faq_tags_reply = await client.wait_for('message', check=check(author, channel), timeout=120)
                     except: faq_tags_reply = None
@@ -312,6 +358,7 @@ If you would like to retry, please re-type the command "{message.content}"''')
 
                     if faq_tags_reply_content == 'x':
                         # do nothing, since the user cancelled the FAQ creation
+                        await channel.send(f'''**Cancelled FAQ Creation**''')
                         return
 
                     try:
@@ -324,7 +371,7 @@ If you would like to retry, please re-type the command "{message.content}"''')
                     except:
                         await channel.send(f"""\
 **Invlaid use of the command. Make sure to specify FAQ tag(s)**
-Example use :'{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.COMMAND_PREFIXES['faq_management']} {BOT_DATA.FAQ_MANAGEMENT_COMMANDS['add']} tag name, alias 1, alias 2'""")
+Example use :'{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['add'][0]} tag name, alias 1, alias 2'""")
                         return
                     
                     if len(valid_aliases) < 1:
@@ -350,6 +397,7 @@ If you would like to retry, please re-type the command "{message.content}"''')
 
                     if faq_title_reply_content == 'x':
                         # do nothing, since the user cancelled the FAQ creation
+                        await channel.send(f'''**Cancelled FAQ Creation**''')
                         return
                     
                     # faq_title_reply_content is the new FAQ's title
@@ -371,20 +419,26 @@ If you would like to retry, please re-type the command "{message.content}"''')
 
                     if faq_description == 'x':
                         # do nothing, since the user cancelled setting the FAQ description
+                        await channel.send(f'''**Cancelled FAQ Creation**''')
                         return
                     
                     # faq_description is the new FAQ's description
 
-                    await channel.send(f'''\
+                    try:
+                        new_faq = {
+                            "tag": valid_aliases,
+                            "title": faq_title_reply_content,
+                            "info": faq_description
+                        }
+
+                        addFaq(new_faq)
+
+                        await channel.send(f'''\
 **Successfully created a new FAQ**''')
+                    except:
+                        await channel.send(f'''\
+**ERROR trying to create FAQ**''')
 
-                    new_faq = {
-                        "tag": valid_aliases,
-                        "title": faq_title_reply_content,
-                        "info": faq_description
-                    }
-
-                    addFaq(new_faq)
 
 
                     
@@ -398,18 +452,19 @@ If you would like to retry, please re-type the command "{message.content}"''')
                     except:
                         await channel.send(f"""\
 **Invlaid use of the command. Make sure to specify a FAQ tag**
-Example use :'{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.COMMAND_PREFIXES['faq_management']} {BOT_DATA.FAQ_MANAGEMENT_COMMANDS['delete']} faq-tag [must not contain spaces]'""")
+Example use :'{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['delete'][0]} faq tag'""")
                         return
                     
                     if findFaqByTag(faq_tag) == None:
                         await channel.send(f'''\
 **Invalid FAQ tag**
-There is no FAQ with the tag "{faq_tag}", use '{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.COMMAND_PREFIXES['faq_management']} {BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list']}' to list out FAQs''')
+There is no FAQ with the tag "{faq_tag}", use '{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to list out FAQs''')
                         return
 
                     await channel.send(f"""\
 **Found FAQ**
 Are you sure you wish to delete this FAQ? Deleting a FAQ is permenant
+To confirm, the FAQ you are about to delete is titled **{findFaqByTag(faq_tag)['title']}**
 Type yes to continue, or anything else to cancel""")
 
                     try: faq_delete_reply = await client.wait_for('message', check=check(author, channel), timeout=25)
@@ -470,7 +525,7 @@ Example use :'{BOT_DATA.FAQ_QUERY_PREFIX} some faq tag'
 You can also use '{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to see a list of all FAQs""")
             return
 
-        faq = findFaqByTag( faq_tag_searches )
+        faq = searchFaqByTag( faq_tag_searches )
 
         if faq == None:
             await channel.send(f"""\
