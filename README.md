@@ -1,9 +1,9 @@
 # bedrock-scripting-faq-bot
 A bot for the Bedrock Scripting Community Discord server
 
-# requirements
+# package requirements
 
-+ discord.py
++ https://discordpy.readthedocs.io/en/latest/intro.html
 + https://pypi.org/project/fuzzywuzzy/
 + https://pypi.org/project/python-Levenshtein/ (optional)
 
