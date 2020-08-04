@@ -1144,15 +1144,6 @@ Use "{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]} [p
             faq_tag_searches = None
     
         if faq_tag_searches == None:
-#             embed = discord.Embed(
-#                 title = '',
-#                 description = f"""\
-# **Invalid use of the command. Make sure to specify FAQ tag(s)**
-# Example use :'{BOT_DATA.FAQ_QUERY_PREFIX} some faq tag'
-# You can also use '{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to see a list of all FAQs""",
-#                 colour = discord.Colour.red()
-#             )
-#             await channel.send(embed=embed)
             return
 
 
