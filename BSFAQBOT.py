@@ -10,6 +10,7 @@ from fuzzywuzzy import fuzz
 # was going to use the commands lib, but personally I find it easier to use the discord.Client() instead
 
 
+
 def loadConfig():
     default_config = {
         'allow_bug_reports': False,
@@ -1143,17 +1144,21 @@ Use "{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]} [p
             faq_tag_searches = None
     
         if faq_tag_searches == None:
-            embed = discord.Embed(
-                title = '',
-                description = f"""\
-**Invalid use of the command. Make sure to specify FAQ tag(s)**
-Example use :'{BOT_DATA.FAQ_QUERY_PREFIX} some faq tag'
-You can also use '{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to see a list of all FAQs""",
-                colour = discord.Colour.red()
-            )
-            await channel.send(embed=embed)
+#             embed = discord.Embed(
+#                 title = '',
+#                 description = f"""\
+# **Invalid use of the command. Make sure to specify FAQ tag(s)**
+# Example use :'{BOT_DATA.FAQ_QUERY_PREFIX} some faq tag'
+# You can also use '{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to see a list of all FAQs""",
+#                 colour = discord.Colour.red()
+#             )
+#             await channel.send(embed=embed)
             return
 
+
+
+        if len(list([c for c in faq_tag_searches if c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'])) == 0:
+            return
 
 
         faq = searchFaqByTag( faq_tag_searches )
