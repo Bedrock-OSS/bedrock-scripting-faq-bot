@@ -56,6 +56,7 @@ class BOT_DATA:
     COMMAND_PREFIXES = {
         'bug': 'bug',
         'help': 'help',
+        'search': 'search',
         'faq_viewing': 'faq',
         'faq_management': 'fm'
     }
@@ -174,6 +175,32 @@ def searchFaqByTag(faq_tag):
         return contains_tag_in_title or contains_tag_in_info or None
 
     return found[0]
+
+def findMultipleFaqsByTag(faq_tag, count=10):
+    '''Returns the faq found by tag, otherwise tries to search for FAQ, otherwise returns None'''
+
+    distances = []
+
+    for faq in faq_data['faq_data']:
+        
+        for tag in faq['tag']:
+            distance = 100 - fuzz.ratio( tag, faq_tag )
+            if faq_tag.replace('-',' ').lower() in faq['info'].lower():
+                distance -= 30
+            if faq_tag.replace('-',' ').lower() in faq['title'].lower():
+                distance -= 25
+            if faq in list([i[1] for i in distances]):
+                existing_entry = list([i for i in distances if i[1]==faq])[0]
+                current_distance = existing_entry[0]
+                if distance < current_distance:
+                    distances.remove(existing_entry)
+                else:
+                    continue
+            distances.append( [distance, faq] )
+    
+    sorted_distances = sorted( distances, key=lambda i: i[0], reverse=False )
+
+    return list( [i[1] for i in sorted_distances] )[:count]
 
 '''
 this function just flattens a list
@@ -360,6 +387,54 @@ Your bug report has been submitted''',
                 bug_report_channel = client.get_channel(BOT_DATA.BUG_REPORT_CHANNEL_ID)
                 await bug_report_channel.send(embed=embed_report)
 
+
+
+
+
+
+            if main_command == BOT_DATA.COMMAND_PREFIXES['search']:
+                # send the search message response
+                '''
+                The search menu of the bot
+                '''
+
+                search_tag = ' '.join(command_split[1:])
+
+                print(search_tag)
+
+                if search_tag == '':
+                    embed = discord.Embed(
+                        title = '',
+                        description = f'''\
+**Invalid use of the command**
+Please specify a tag to search for,
+example: "{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.COMMAND_PREFIXES['search']} _some search tag_"''',
+                        colour = discord.Colour.red()
+                    )
+                    await channel.send(embed=embed)
+                    return
+
+                found = findMultipleFaqsByTag(search_tag, count=8)
+
+                embed = discord.Embed(
+                    title = 'Related FAQs',
+                    description = '---',
+                    colour = discord.Colour.blue()
+                )
+                
+                for faq_entry in found:
+                    embed.add_field(
+                        name = faq_entry['title'].title(),
+                        value = ', '.join( faq_entry['tag'] ),
+                        inline = False
+                    )
+            
+                embed.set_footer(text=f'''\
+({len(found)} total similar faq entries)''')
+
+                await channel.send(embed=embed)
+
+                # await channel.send(embed=embed)
 
 
 
@@ -661,7 +736,7 @@ Please enter the FAQ Description, and include any relative links, or type "x" to
                     )
                     await channel.send(embed=embed)
 
-                    try: faq_description_reply = await client.wait_for('message', check=check(author, channel), timeout=300)
+                    try: faq_description_reply = await client.wait_for('message', check=check(author, channel), timeout=600)
                     except: faq_description_reply = None
 
                     if faq_description_reply == None:
@@ -947,7 +1022,7 @@ Please enter a new description for the FAQ, or enter "x" to cancel''',
                         )
                         await channel.send(embed=embed)
                         try:
-                            msgresp = await client.wait_for('message', check=check(author, channel), timeout=120)
+                            msgresp = await client.wait_for('message', check=check(author, channel), timeout=300)
                             response = msgresp.content
                         except:
                             embed = discord.Embed(
