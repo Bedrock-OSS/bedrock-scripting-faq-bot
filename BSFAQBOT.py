@@ -459,8 +459,8 @@ example: "{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.COMMAND_PREFIXES['search']} _so
                 )
 
                 embed.add_field(
-                    name = f'{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS["list"][0]} [page:int]',
-                    value = f'Displays a list of all FAQs, example: "{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS["list"][0]} 1"',
+                    name = f'{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS["list"][0]}',
+                    value = f'Displays a list of all FAQs, example: "{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS["list"][0]}"',
                     inline = False
                 )
 
@@ -929,6 +929,17 @@ If you would like to retry, please re-type the command "{message.content}"''',
                             await channel.send(embed=embed)
                             return
                         
+                        if response == 'x':
+                            embed = discord.Embed(
+                                title = '',
+                                description = f'''\
+**Editing FAQ cancelled**
+Cancelled editing FAQ title''',
+                                colour = discord.Colour.red()
+                            )
+                            await channel.send(embed=embed)
+                            return
+                        
                         deleteFaq( found_faq['tag'][0] )
                         found_faq['title'] = response
                         addFaq(found_faq)
@@ -964,6 +975,17 @@ Please enter the new tags for the FAQ, or enter "x" to cancel''',
                                 description = f'''\
 **Editing FAQ timed out**
 If you would like to retry, please re-type the command "{message.content}"''',
+                                colour = discord.Colour.red()
+                            )
+                            await channel.send(embed=embed)
+                            return
+
+                        if response == 'x':
+                            embed = discord.Embed(
+                                title = '',
+                                description = f'''\
+**Editing FAQ cancelled**
+Cancelled editing FAQ tags''',
                                 colour = discord.Colour.red()
                             )
                             await channel.send(embed=embed)
@@ -1041,6 +1063,17 @@ If you would like to retry, please re-type the command "{message.content}"''',
                                 description =f'''\
 **Invalid FAQ description**
 You cannot leave the description of a FAQ blank''',
+                                colour = discord.Colour.red()
+                            )
+                            await channel.send(embed=embed)
+                            return
+                        
+                        if response == 'x':
+                            embed = discord.Embed(
+                                title = '',
+                                description =f'''\
+**Editing FAQ cancelled**
+Cancelled editing FAQ description''',
                                 colour = discord.Colour.red()
                             )
                             await channel.send(embed=embed)
@@ -1140,14 +1173,7 @@ The FAQ '{faq_tag}' has not been deleted""",
                             colour = discord.Colour.red()
                         )
                         await channel.send(embed=embed)
-
-
-
-
-
-
-
-
+        
 
 
 
@@ -1166,45 +1192,14 @@ The FAQ '{faq_tag}' has not been deleted""",
         if main_command in BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list']:
             # list out all the FAQ tags and text
 
-            list_page = 1
-            if len(command_split) > 1:
-                try: list_page = int(command_split[1])
-                except: list_page = 1
-            list_page -= 1
+            all_faq_tags = []
 
-            embed = discord.Embed(
-                title = 'All FAQs',
-                description = '---',
-                colour = discord.Colour.blue()
-            )
+            for faq in faq_data['faq_data']:
+                faq_tags = (faq['tag'])
+                longest_tag = max(faq_tags, key=len)
+                all_faq_tags.append(longest_tag)
 
-            all_faq_entries = faq_data['faq_data']
-            paginated_faq_entries = paginate_list(all_faq_entries, BOT_DATA.PAGINATE_FAQ_LIST)
-
-            if list_page > len(paginated_faq_entries)-1:
-                list_page = 0
-            
-            if len(paginated_faq_entries) < 1:
-                embed.add_field(
-                    name = 'ERROR: No FAQs Found',
-                    value = '-',
-                    inline = False
-                )
-            
-            else:
-                for faq_entry in paginated_faq_entries[ list_page ]:
-                    embed.add_field(
-                        name = faq_entry['title'].title(),
-                        value = ', '.join( faq_entry['tag'] ),
-                        inline = False
-                    )
-            
-            embed.set_footer(text=f'''\
-page {list_page+1} of {len(paginated_faq_entries)}
-({len(all_faq_entries)} total faq entries)
-Use "{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]} [page]" to list a given page of FAQs''')
-
-            await channel.send(embed=embed)
+            await channel.send('**All FAQ Tags**\n'+', '.join( ['`%s`' % (x) for x in all_faq_tags] ))
 
             return
 
@@ -1246,7 +1241,19 @@ You can use '{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'
             colour = discord.Colour.blue()
         )
 
-        await channel.send(embed=embed)
+        msg = await channel.send(embed=embed)
+
+        await msg.add_reaction('🚫')
+
+        def check_reactions(reaction, user):
+            return user.id == author.id and reaction.emoji == '🚫'
+
+        try:
+            await client.wait_for('reaction_add', timeout=15.0, check=check_reactions)
+        except:
+            return
+        else:
+            await msg.delete()
 
 
 
