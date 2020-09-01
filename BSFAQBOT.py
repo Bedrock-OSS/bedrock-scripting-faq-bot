@@ -1093,10 +1093,6 @@ Edited FAQ description''',
                         await channel.send(embed=embed)
 
 
-                    
-
-
-
 
                     
 
@@ -1249,11 +1245,15 @@ You can use '{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'
             return user.id == author.id and reaction.emoji == '🚫'
 
         try:
-            await client.wait_for('reaction_add', timeout=15.0, check=check_reactions)
+            await client.wait_for('reaction_add', timeout=2.0, check=check_reactions)
         except:
-            return
+            await msg.remove_reaction('🚫', client.user)
         else:
             await msg.delete()
+            try:
+                await message.delete()
+            except:
+                print("Failed to delete message, may need extra permissions")
 
 
 
