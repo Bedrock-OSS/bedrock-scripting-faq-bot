@@ -73,7 +73,7 @@ class BOT_DATA:
         'bug-report-cooldown': ['r-cooldown', 'reporting-cooldown', 'bug-report-cooldown']
     }
 
-    PAGINATE_FAQ_LIST = 5
+    PAGINATE_FAQ_LIST = 25
 
     BLACKLISTED_TAGS = ['list']
 
@@ -459,8 +459,8 @@ example: "{BOT_DATA.BOT_COMMAND_PREFIX}{BOT_DATA.COMMAND_PREFIXES['search']} _so
                 )
 
                 embed.add_field(
-                    name = f'{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS["list"][0]}',
-                    value = f'Displays a list of all FAQs, example: "{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS["list"][0]}"',
+                    name = f'{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS["list"][0]} [page:int]',
+                    value = f'Displays a list of all FAQs, example: "{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS["list"][0]} 2"',
                     inline = False
                 )
 
@@ -1194,9 +1194,26 @@ The FAQ '{faq_tag}' has not been deleted""",
                 faq_tags = (faq['tag'])
                 longest_tag = max(faq_tags, key=len)
                 all_faq_tags.append(longest_tag)
+            
+            all_faq_tags.sort()
+            # sort the list of tags alphabetically
 
-            await channel.send('**All FAQ Tags**\n'+', '.join( ['`%s`' % (x) for x in all_faq_tags] ))
+            paginated = paginate_list( all_faq_tags, BOT_DATA.PAGINATE_FAQ_LIST )
 
+            list_page = 1
+            if len(command_split) > 1:
+                try: list_page = int(command_split[1])
+                except: list_page = 1
+            list_page -= 1
+
+            if list_page > len(paginated)-1:
+                list_page = 0
+            
+            if len(paginated) < 1:
+                await channel.send("No FAQs found")
+                return
+
+            await channel.send('**All FAQ Tags**\n'+', '.join( ['`%s`' % (x) for x in paginated[list_page]] )+f'\n_page {list_page+1} of {len(paginated)}_')
             return
 
 
@@ -1245,7 +1262,7 @@ You can use '{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'
             return user.id == author.id and reaction.emoji == '🚫'
 
         try:
-            await client.wait_for('reaction_add', timeout=2.0, check=check_reactions)
+            await client.wait_for('reaction_add', timeout=12.5, check=check_reactions)
         except:
             await msg.remove_reaction('🚫', client.user)
         else:
