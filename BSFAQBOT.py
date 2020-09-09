@@ -1259,7 +1259,7 @@ You can use '{BOT_DATA.FAQ_QUERY_PREFIX}{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'
         await msg.add_reaction('🚫')
 
         def check_reactions(reaction, user):
-            return user.id == author.id and reaction.emoji == '🚫'
+            return user.id == author.id and reaction.emoji == '🚫' and reaction.message.id == msg.id
 
         try:
             await client.wait_for('reaction_add', timeout=12.5, check=check_reactions)
