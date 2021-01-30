@@ -39,6 +39,10 @@ class BOT_DATA:
     TOKEN_FILENAME = 'token.txt'
     # the filename of the txt file where the bot token is stored
 
+    APPROVED_SERVERS_FILENAME = 'approved_servers.txt'
+    # the filename of the txt file which contains IDs of all
+    # the discord servers which can use admin commands for the bot
+
     FAQ_DATA_FILENAME = 'faq.json'
     FAQ_DATA_FILENAME_BIN = 'faq_bin.json'
 
@@ -84,6 +88,11 @@ class BOT_DATA:
     # delay (in seconds) between bug reports by users
     ALLOW_BUG_REPORTS = (
         CONFIG['allow_bug_reports'] if BUG_REPORT_CHANNEL_ID != 0 else False)
+    
+    with open(APPROVED_SERVERS_FILENAME, 'r') as f:
+        APPROVED_SERVERS = list([line.strip() for line in f.readlines()])
+    # load the approved servers IDs from the file
+    print(APPROVED_SERVERS)
 
 def paginate_list(l, n):
     '''
@@ -262,6 +271,11 @@ async def on_message(message):
     except:
         roles = []
     channel = message.channel
+    
+    server_id = str(message.guild.id)
+    # this is the actual id of the server that the message was sent in
+    # converted it to a string, because strings are nicer I guess
+    # also because the ids in the approved servers list are strings
 
     if isinstance(channel, discord.channel.DMChannel):
         # await channel.send("I don't execute commands in DMs, sorry")
@@ -565,7 +579,7 @@ async def on_message(message):
             # check if the command is a !fm command
             action = main_command
 
-            if BOT_DATA.BOT_ADMIN_ROLE in [role.name for role in roles]:
+            if (BOT_DATA.BOT_ADMIN_ROLE in [role.name for role in roles]) and (server_id in BOT_DATA.APPROVED_SERVERS):
                 if action in BOT_DATA.FAQ_MANAGEMENT_COMMANDS[
                         'bug-report-enabled']:
                     if len(command_split) != 2:
@@ -638,7 +652,7 @@ async def on_message(message):
                         f"{BOT_DATA.FAQ_DATA_FILENAME_BIN}",
                         file=discord.File(faq_data_filename_bin_path))
 
-            if BOT_DATA.FAQ_MANAGEMENT_ROLE in [role.name for role in roles]:
+            if (BOT_DATA.FAQ_MANAGEMENT_ROLE in [role.name for role in roles]) and (server_id in BOT_DATA.APPROVED_SERVERS):
                 # print("[DEBUG] caller has adequate privellages to use 
                 # !fm commands this this command")
 
