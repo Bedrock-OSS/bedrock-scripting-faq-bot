@@ -92,7 +92,6 @@ class BOT_DATA:
     with open(APPROVED_SERVERS_FILENAME, 'r') as f:
         APPROVED_SERVERS = list([line.strip() for line in f.readlines()])
     # load the approved servers IDs from the file
-    print(APPROVED_SERVERS)
 
 def paginate_list(l, n):
     '''
