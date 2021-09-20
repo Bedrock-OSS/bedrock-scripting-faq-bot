@@ -1,0 +1,16 @@
+name: Deploy
+
+on: workflow_dispatch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: bedrock-oss/query-endpoint-action@main
+        with:
+          hostname: '45.33.198.89'
+          path: '/deploy'
+          port: 5000
+          queryInterval: 1000
+          auth: ${{ secrets.DEPLOY_SECRET }}
+          timeout: 1
