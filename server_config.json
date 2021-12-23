@@ -1,3 +1,3 @@
 {
-    "run_process": "/usr/bin/python3 BSFAQBOT.py"
+    "run_process": "python3 BSFAQBOT.py"
 }
