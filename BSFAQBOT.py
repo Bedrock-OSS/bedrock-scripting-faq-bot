@@ -962,7 +962,7 @@ async def on_message(message):
                         await channel.send(embed=embed)
                         return
 
-                    if faq_edit_attribute_choice in ['t', 'title']:
+                    if faq_edit_attribute_choice in ['t', 'title', 'T', 'Title']:
                         embed = discord.Embed(
                             title='',
                             description=(
@@ -1016,7 +1016,7 @@ async def on_message(message):
                         )
                         await channel.send(embed=embed)
 
-                    elif faq_edit_attribute_choice in ['ta', 'tags']:
+                    elif faq_edit_attribute_choice in ['ta', 'tags', 'Ta', 'Tags']:
                         embed = discord.Embed(
                             title='',
                             description=(
@@ -1097,7 +1097,7 @@ async def on_message(message):
                         )
                         await channel.send(embed=embed)
 
-                    elif faq_edit_attribute_choice in ['d', 'description']:
+                    elif faq_edit_attribute_choice in ['d', 'description', 'D', 'Description']:
                         embed = discord.Embed(
                             title='',
                             description=(
