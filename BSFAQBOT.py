@@ -372,7 +372,7 @@ async def on_message(message):
 
                 bug_report = bug_report_reply.content
 
-                if bug_report == 'x':
+                if bug_report.lower() == 'x':
                     embed = discord.Embed(
                         title='',
                         description='**cancelled creation of bug report**',
@@ -687,7 +687,7 @@ async def on_message(message):
                         return
 
                     faq_tags_reply_content = faq_tags_reply.content
-                    if faq_tags_reply_content == 'x':
+                    if faq_tags_reply_content.lower() == 'x':
                         # do nothing, since the user cancelled the FAQ creation
                         embed = discord.Embed(
                             title='',
@@ -768,7 +768,7 @@ async def on_message(message):
 
                     faq_title_reply_content = faq_title_reply.content
 
-                    if faq_title_reply_content == 'x':
+                    if faq_title_reply_content.lower() == 'x':
                         # do nothing, since the user cancelled the FAQ creation
                         embed = discord.Embed(
                             title='',
@@ -812,7 +812,7 @@ async def on_message(message):
 
                     faq_description = faq_description_reply.content
 
-                    if faq_description == 'x':
+                    if faq_description.lower() == 'x':
                         # do nothing, since the user cancelled setting the FAQ
                         # description
                         embed = discord.Embed(
@@ -881,7 +881,7 @@ async def on_message(message):
                         return
 
                     faq_tag_reply_content = faq_tags_reply.content
-                    if faq_tag_reply_content == 'x':
+                    if faq_tag_reply_content.lower() == 'x':
                         # do nothing, since the user cancelled the FAQ editing
                         embed = discord.Embed(
                             title='',
@@ -952,7 +952,7 @@ async def on_message(message):
                         return
 
                     faq_edit_attribute_choice = faq_edit_attribute.content
-                    if faq_edit_attribute_choice == 'x':
+                    if faq_edit_attribute_choice.lower() == 'x':
                         # do nothing, since the user cancelled the FAQ creation
                         embed = discord.Embed(
                             title='',
@@ -991,7 +991,7 @@ async def on_message(message):
                             await channel.send(embed=embed)
                             return
 
-                        if response == 'x':
+                        if response.lower() == 'x':
                             embed = discord.Embed(
                                 title='',
                                 description=(
@@ -1044,7 +1044,7 @@ async def on_message(message):
                             await channel.send(embed=embed)
                             return
 
-                        if response == 'x':
+                        if response.lower() == 'x':
                             embed = discord.Embed(
                                 title='',
                                 description=(
@@ -1137,7 +1137,7 @@ async def on_message(message):
                             await channel.send(embed=embed)
                             return
 
-                        if response == 'x':
+                        if response.lower() == 'x':
                             embed = discord.Embed(
                                 title='',
                                 description=(
