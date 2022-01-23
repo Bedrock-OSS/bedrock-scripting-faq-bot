@@ -818,8 +818,8 @@ async def on_message(message):
                         await channel.send(embed=embed)
                         return
 
-                    if message.attachments:
-                        image_url = str(message.attachments).split("url='")[1][:-3]
+                    if faq_description_reply.attachments:
+                        image_url = str(faq_description_reply.attachments).split("url='")[1][:-3]
                     # tries to set image link
 
                     faq_description = faq_description_reply.content
