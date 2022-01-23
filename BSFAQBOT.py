@@ -473,7 +473,7 @@ async def on_message(message):
                     title='Bedrock Scripting FAQ Help',
                     description=(
                         'The Bedrock Scripting FAQ Bot\'s commands are as '
-                        'follows;'),
+                        'follows:'),
                     colour=discord.Colour.blue()
                 )
 
@@ -482,6 +482,14 @@ async def on_message(message):
                         f'{BOT_DATA.BOT_COMMAND_PREFIX}'
                         f'{BOT_DATA.COMMAND_PREFIXES["help"]}'),
                     value='Displays the bot\'s help menu',
+                    inline=False
+                )
+
+                 embed.add_field(
+                    name=(
+                        f'{BOT_DATA.BOT_COMMAND_PREFIX}'
+                        f'{BOT_DATA.COMMAND_PREFIXES["search"]}'),
+                    value='Searches through FAQs',
                     inline=False
                 )
 
