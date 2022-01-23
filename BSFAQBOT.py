@@ -811,7 +811,7 @@ async def on_message(message):
                         return
 
                     try:
-                        image_url = str(faq_description_reply.attachments).split("url='")[1][:-3]
+                        image_url = str(message.attachments).split("url='")[1][:-3]
                     except:
                         image_url = ''
                     # tries to set image link
