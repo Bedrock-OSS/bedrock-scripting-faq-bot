@@ -810,6 +810,12 @@ async def on_message(message):
                         await channel.send(embed=embed)
                         return
 
+                    try:
+                        image_url = str(faq_description_reply.attachments).split("url='")[1][:-3]
+                    except:
+                        image_url = ''
+                    # tries to set image link
+
                     faq_description = faq_description_reply.content
 
                     if faq_description.lower() == 'x':
@@ -828,7 +834,8 @@ async def on_message(message):
                         new_faq = {
                             "tag": valid_aliases,
                             "title": faq_title_reply_content,
-                            "info": faq_description
+                            "info": faq_description,
+                            "image": image_url
                         }
 
                         addFaq(new_faq)
@@ -1335,10 +1342,13 @@ async def on_message(message):
             return
 
         embed = discord.Embed(
-            title=f'{faq["title"]}',
+            title=faq["title"],
             description=faq["info"],
             colour=discord.Colour.blue()
         )
+
+        embed.set_image(url=faq["image"])
+        # adds image to embed
 
         msg = await channel.send(embed=embed)
 
