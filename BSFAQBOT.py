@@ -818,10 +818,6 @@ async def on_message(message):
                         await channel.send(embed=embed)
                         return
 
-                    if faq_description_reply.attachments:
-                        image_url = str(faq_description_reply.attachments).split("url='")[1][:-3]
-                    # tries to set image link
-
                     faq_description = faq_description_reply.content
 
                     if faq_description.lower() == 'x':
@@ -843,10 +839,9 @@ async def on_message(message):
                             "info": faq_description
                         }
 
-                        try:
-                            new_faq["image"] = image_url
-                        except:
-                            pass
+                        if faq_description_reply.attachments:
+                            new_faq["image"] = str(faq_description_reply.attachments).split("url='")[1][:-3]
+                        # tries to set image link
 
                         addFaq(new_faq)
 
@@ -1171,6 +1166,9 @@ async def on_message(message):
 
                         deleteFaq(found_faq['tag'][0])
                         found_faq['info'] = response
+                        if msgresp.attachments:
+                            found_faq["image"] = str(faq_description_reply.attachments).split("url='")[1][:-3]
+                        # tries to set image link
                         addFaq(found_faq)
 
                         embed = discord.Embed(
