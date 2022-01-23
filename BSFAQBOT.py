@@ -1347,7 +1347,10 @@ async def on_message(message):
             colour=discord.Colour.blue()
         )
 
-        embed.set_image(url=faq["image"])
+        try:
+            embed.set_image(url=faq["image"])
+        except:
+            pass
         # adds image to embed
 
         msg = await channel.send(embed=embed)
