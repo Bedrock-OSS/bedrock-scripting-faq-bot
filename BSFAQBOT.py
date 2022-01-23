@@ -473,7 +473,7 @@ async def on_message(message):
                     title='Bedrock Scripting FAQ Help',
                     description=(
                         'The Bedrock Scripting FAQ Bot\'s commands are as '
-                        'follows;'),
+                        'follows:'),
                     colour=discord.Colour.blue()
                 )
 
@@ -482,6 +482,14 @@ async def on_message(message):
                         f'{BOT_DATA.BOT_COMMAND_PREFIX}'
                         f'{BOT_DATA.COMMAND_PREFIXES["help"]}'),
                     value='Displays the bot\'s help menu',
+                    inline=False
+                )
+
+                 embed.add_field(
+                    name=(
+                        f'{BOT_DATA.BOT_COMMAND_PREFIX}'
+                        f'{BOT_DATA.COMMAND_PREFIXES["search"]}'),
+                    value='Searches through FAQs',
                     inline=False
                 )
 
@@ -810,12 +818,6 @@ async def on_message(message):
                         await channel.send(embed=embed)
                         return
 
-                    try:
-                        image_url = str(message.attachments).split("url='")[1][:-3]
-                    except:
-                        image_url = ''
-                    # tries to set image link
-
                     faq_description = faq_description_reply.content
 
                     if faq_description.lower() == 'x':
@@ -834,9 +836,12 @@ async def on_message(message):
                         new_faq = {
                             "tag": valid_aliases,
                             "title": faq_title_reply_content,
-                            "info": faq_description,
-                            "image": image_url
+                            "info": faq_description
                         }
+
+                        if faq_description_reply.attachments:
+                            new_faq["image"] = str(faq_description_reply.attachments).split("url='")[1][:-3]
+                        # tries to set image link
 
                         addFaq(new_faq)
 
@@ -1161,6 +1166,9 @@ async def on_message(message):
 
                         deleteFaq(found_faq['tag'][0])
                         found_faq['info'] = response
+                        if msgresp.attachments:
+                            found_faq["image"] = str(faq_description_reply.attachments).split("url='")[1][:-3]
+                        # tries to set image link
                         addFaq(found_faq)
 
                         embed = discord.Embed(
