@@ -811,6 +811,11 @@ async def on_message(message):
                         return
 
                     faq_description = faq_description_reply.content
+                    
+                    if faq_description_reply.attachments:
+                        # should add attachements to faq description
+                        faq_description += ' '
+                        faq_description += str(message.attachments).split("url='")[1][:-3]
 
                     if faq_description.lower() == 'x':
                         # do nothing, since the user cancelled setting the FAQ
