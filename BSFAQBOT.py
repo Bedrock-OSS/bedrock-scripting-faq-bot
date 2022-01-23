@@ -810,10 +810,8 @@ async def on_message(message):
                         await channel.send(embed=embed)
                         return
 
-                    try:
+                    if message.attachments:
                         image_url = str(message.attachments).split("url='")[1][:-3]
-                    except:
-                        image_url = ''
                     # tries to set image link
 
                     faq_description = faq_description_reply.content
@@ -834,9 +832,13 @@ async def on_message(message):
                         new_faq = {
                             "tag": valid_aliases,
                             "title": faq_title_reply_content,
-                            "info": faq_description,
-                            "image": image_url
+                            "info": faq_description
                         }
+
+                        try:
+                            new_faq["image"] = image_url
+                        except:
+                            pass
 
                         addFaq(new_faq)
 
