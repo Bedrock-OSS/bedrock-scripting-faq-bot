@@ -1097,7 +1097,8 @@ async def on_message(message):
                         )
                         await channel.send(embed=embed)
 
-                    elif faq_edit_attribute_choice in ['d', 'description', 'D', 'Description']:
+                    elif faq_edit_attribute_choice.lower() in ['d', 'description']:
+
                         embed = discord.Embed(
                             title='',
                             description=(
