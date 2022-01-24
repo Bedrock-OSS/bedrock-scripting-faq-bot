@@ -1168,7 +1168,7 @@ async def on_message(message):
                         deleteFaq(found_faq['tag'][0])
                         found_faq['info'] = response
                         if msgresp.attachments:
-                            found_faq["image"] = str(faq_description_reply.attachments).split("url='")[1][:-3]
+                            found_faq["image"] = str(msgresp.attachments).split("url='")[1][:-3]
                         # tries to set image link
                         addFaq(found_faq)
 
