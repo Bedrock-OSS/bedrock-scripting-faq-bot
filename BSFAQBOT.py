@@ -843,6 +843,7 @@ async def on_message(message):
                             new_faq["image"] = str(faq_description_reply.attachments).split("url='")[1][:-3]
                         # tries to set image link
 
+
                         addFaq(new_faq)
 
                         embed = discord.Embed(
