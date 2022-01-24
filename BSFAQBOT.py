@@ -485,7 +485,7 @@ async def on_message(message):
                     inline=False
                 )
 
-                 embed.add_field(
+                embed.add_field(
                     name=(
                         f'{BOT_DATA.BOT_COMMAND_PREFIX}'
                         f'{BOT_DATA.COMMAND_PREFIXES["search"]}'),
