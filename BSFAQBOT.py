@@ -56,12 +56,12 @@ class BOT_DATA:
         'help': 'help',
         'search': 'search',
         'faq_viewing': 'faq',
-        'faq_management': 'fm'
+        'faq_management': 'fm',
+        'list': ['list', 'all', 'faqs']
     }
     # the command prefixes that the bot recognises
 
     FAQ_MANAGEMENT_COMMANDS = {
-        'list': ['list', 'all', 'faqs'],
         'add': ['add', 'create', 'new', 'make'],
         'delete': ['delete', 'remove', 'incinerate', 'shred'],
         'edit': ['edit', 'change', 'modify'],
@@ -298,7 +298,7 @@ async def on_message(message):
             command_split = command_request.split(' ')
             main_command = command_split[0]
 
-            if main_command in BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list']:
+            if main_command in BOT_DATA.COMMAND_PREFIXES['list']:
             # list out all the FAQ tags and text
 
             all_faq_tags = []
@@ -1248,7 +1248,7 @@ async def on_message(message):
                                 '**Invalid FAQ tag**\n'
                                 f'There is no FAQ with the tag "{faq_tag}", '
                                 f"use '{BOT_DATA.BOT_COMMAND_PREFIX}"
-                                f"{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}"
+                                f"{BOT_DATA.COMMAND_PREFIXES['list'][0]}"
                                 "\' to list out FAQs"
                             ),
                             colour=discord.Colour.red()
@@ -1345,7 +1345,7 @@ async def on_message(message):
                     f'"{faq_tag_searches}"**\n'
                     "You can use '"
                     f"{BOT_DATA.BOT_COMMAND_PREFIX}"
-                    f"{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to see a "
+                    f"{BOT_DATA.COMMAND_PREFIXES['list'][0]}' to see a "
                     "list of all FAQs"
                 ),
                 colour=discord.Colour.red()
