@@ -1324,43 +1324,6 @@ async def on_message(message):
         command_split = command_request.split(' ')
         main_command = command_split[0]
 
-        if main_command in BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list']:
-            # list out all the FAQ tags and text
-
-            all_faq_tags = []
-
-            for faq in faq_data['faq_data']:
-                faq_tags = (faq['tag'])
-                longest_tag = max(faq_tags, key=len)
-                all_faq_tags.append(longest_tag)
-
-            all_faq_tags.sort()
-            # sort the list of tags alphabetically
-
-            paginated = paginate_list(all_faq_tags, BOT_DATA.PAGINATE_FAQ_LIST)
-
-            list_page = 1
-            if len(command_split) > 1:
-                try:
-                    list_page = int(command_split[1])
-                except:
-                    list_page = 1
-            list_page -= 1
-
-            if list_page > len(paginated)-1:
-                list_page = 0
-
-            if len(paginated) < 1:
-                await channel.send("No FAQs found")
-                return
-
-            await channel.send(
-                '**All FAQ Tags**\n' +
-                ', '.join(['`%s`' % (x) for x in paginated[list_page]]) +
-                f'\n_page {list_page+1} of {len(paginated)}_'
-            )
-            return
-
         try:
             faq_tag_searches = message.content.split(
                 BOT_DATA.FAQ_QUERY_PREFIX, 1
