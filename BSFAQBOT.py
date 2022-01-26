@@ -485,7 +485,7 @@ async def on_message(message):
                     inline=False
                 )
 
-                 embed.add_field(
+                embed.add_field(
                     name=(
                         f'{BOT_DATA.BOT_COMMAND_PREFIX}'
                         f'{BOT_DATA.COMMAND_PREFIXES["search"]}'),
@@ -843,6 +843,7 @@ async def on_message(message):
                             new_faq["image"] = str(faq_description_reply.attachments).split("url='")[1][:-3]
                         # tries to set image link
 
+
                         addFaq(new_faq)
 
                         embed = discord.Embed(
@@ -1167,8 +1168,12 @@ async def on_message(message):
                         deleteFaq(found_faq['tag'][0])
                         found_faq['info'] = response
                         if msgresp.attachments:
-                            found_faq["image"] = str(faq_description_reply.attachments).split("url='")[1][:-3]
+                            found_faq["image"] = str(
+                                msgresp.attachments).split("url='")[1][:-3]
                         # tries to set image link
+                        else:
+                            found_faq["image"] = ''
+                        # if no attachments, resets the image field
                         addFaq(found_faq)
 
                         embed = discord.Embed(
