@@ -1168,8 +1168,12 @@ async def on_message(message):
                         deleteFaq(found_faq['tag'][0])
                         found_faq['info'] = response
                         if msgresp.attachments:
-                            found_faq["image"] = str(msgresp.attachments).split("url='")[1][:-3]
+                            found_faq["image"] = str(
+                                msgresp.attachments).split("url='")[1][:-3]
                         # tries to set image link
+                        else:
+                            found_faq["image"] = ''
+                        # if no attachments, resets the image field
                         addFaq(found_faq)
 
                         embed = discord.Embed(
