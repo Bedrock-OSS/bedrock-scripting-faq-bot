@@ -56,12 +56,12 @@ class BOT_DATA:
         'help': 'help',
         'search': 'search',
         'faq_viewing': 'faq',
-        'faq_management': 'fm'
+        'faq_management': 'fm',
+        'list': 'list'
     }
     # the command prefixes that the bot recognises
 
     FAQ_MANAGEMENT_COMMANDS = {
-        'list': ['list', 'all', 'faqs'],
         'add': ['add', 'create', 'new', 'make'],
         'delete': ['delete', 'remove', 'incinerate', 'shred'],
         'edit': ['edit', 'change', 'modify'],
@@ -298,6 +298,43 @@ async def on_message(message):
             command_split = command_request.split(' ')
             main_command = command_split[0]
 
+            if main_command in BOT_DATA.COMMAND_PREFIXES['list']:
+                # list out all the FAQ tags and text
+
+                all_faq_tags = []
+
+                for faq in faq_data['faq_data']:
+                    faq_tags = (faq['tag'])
+                    longest_tag = max(faq_tags, key=len)
+                    all_faq_tags.append(longest_tag)
+
+                all_faq_tags.sort()
+                # sort the list of tags alphabetically
+
+                paginated = paginate_list(
+                    all_faq_tags, BOT_DATA.PAGINATE_FAQ_LIST)
+
+                list_page = 1
+                if len(command_split) > 1:
+                    try:
+                        list_page = int(command_split[1])
+                    except:
+                        list_page = 1
+                list_page -= 1
+
+                if list_page > len(paginated)-1:
+                    list_page = 0
+
+                if len(paginated) < 1:
+                    await channel.send("No FAQs found")
+                    return
+
+                await channel.send(
+                    '**All FAQ Tags**\n' +
+                    ', '.join(['`%s`' % (x) for x in paginated[list_page]]) +
+                    f'\n_page {list_page+1} of {len(paginated)}_'
+                )
+
             if main_command == BOT_DATA.COMMAND_PREFIXES['bug'] and not CONFIG[
                     'allow_bug_reports']:
                 # the user wants to report a bug, but bug reports are turned 
@@ -495,13 +532,13 @@ async def on_message(message):
 
                 embed.add_field(
                     name=(
-                        f'{BOT_DATA.FAQ_QUERY_PREFIX}'
-                        f'{BOT_DATA.FAQ_MANAGEMENT_COMMANDS["list"][0]} '
+                        f'{BOT_DATA.BOT_COMMAND_PREFIX}'
+                        f'{BOT_DATA.COMMAND_PREFIXES["list"]} '
                         '[page:int]'),
                     value=(
                         f'Displays a list of all FAQs, example: '
-                        f'"{BOT_DATA.FAQ_QUERY_PREFIX}'
-                        f'{BOT_DATA.FAQ_MANAGEMENT_COMMANDS["list"][0]} 2"'),
+                        f'"{BOT_DATA.BOT_COMMAND_PREFIX}'
+                        f'{BOT_DATA.COMMAND_PREFIXES["list"]} 2"'),
                     inline=False
                 )
 
@@ -1278,7 +1315,7 @@ async def on_message(message):
                         await channel.send(embed=embed)
 
     if message.content.startswith(BOT_DATA.FAQ_QUERY_PREFIX):
-        # check that this message is a command, e.g: '!help'
+        # check that this message is a command, e.g: '?[tag]'
 
         print(f"[DEBUG] command (FAQ) called : {message.content}")
 
@@ -1348,8 +1385,8 @@ async def on_message(message):
                     "**No FAQs could be found when searching for "
                     f'"{faq_tag_searches}"**\n'
                     "You can use '"
-                    f"{BOT_DATA.FAQ_QUERY_PREFIX}"
-                    f"{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}' to see a "
+                    f"{BOT_DATA.BOT_COMMAND_PREFIX}"
+                    f"{BOT_DATA.COMMAND_PREFIXES['list']}' to see a "
                     "list of all FAQs"
                 ),
                 colour=discord.Colour.red()
