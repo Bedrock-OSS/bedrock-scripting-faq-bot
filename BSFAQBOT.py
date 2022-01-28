@@ -66,7 +66,7 @@ class BOT_DATA:
         'delete': ['delete', 'remove', 'incinerate', 'shred'],
         'edit': ['edit', 'change', 'modify'],
         'recycle': ['recycle', 'bin', 'faq-bin'],
-
+        'download': ['export', 'download'],
         'bug-report-enabled': ['r-enabled', 'enable-reporting', 'bug-report'],
         'bug-report-cooldown': ['r-cooldown', 'reporting-cooldown', 'bug-report-cooldown']
     }
@@ -689,12 +689,19 @@ async def on_message(message):
                     )
                     await channel.send(embed=embed)
                 if action in BOT_DATA.FAQ_MANAGEMENT_COMMANDS['recycle']:
-                    # download the recycle bin faq folder
+                    # download the faq_bin.json
                     faq_data_filename_bin_path = os.path.join(
                         os.getcwd(), BOT_DATA.FAQ_DATA_FILENAME_BIN)
                     await channel.send(
                         f"{BOT_DATA.FAQ_DATA_FILENAME_BIN}",
                         file=discord.File(faq_data_filename_bin_path))
+                if action in BOT_DATA.FAQ_MANAGEMENT_COMMANDS['download']:
+                    # download the faq.json
+                    faq_data_filename_path = os.path.join(
+                        os.getcwd(), BOT_DATA.FAQ_DATA_FILENAME)
+                    await channel.send(
+                        f"{BOT_DATA.FAQ_DATA_FILENAME}",
+                        file=discord.File(faq_data_filename_path))
 
             if (BOT_DATA.FAQ_MANAGEMENT_ROLE in [role.name for role in roles]) and (server_id in BOT_DATA.APPROVED_SERVERS):
                 # print("[DEBUG] caller has adequate privellages to use 
