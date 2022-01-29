@@ -507,9 +507,9 @@ async def on_message(message):
                 # The help menu of the bot
 
                 embed = discord.Embed(
-                    title='Bedrock Scripting FAQ Help',
+                    title='Bedrock Addons FAQ Help',
                     description=(
-                        'The Bedrock Scripting FAQ Bot\'s commands are as '
+                        'The Bedrock Addons FAQ Bot\'s commands are as '
                         'follows:'),
                     colour=discord.Colour.blue()
                 )
