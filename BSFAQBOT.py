@@ -494,7 +494,7 @@ async def on_message(message):
 
                 for faq_entry in found:
                     embed.add_field(
-                        name=faq_entry['title'].title(),
+                        name=faq_entry['title'],
                         value=', '.join(faq_entry['tag']),
                         inline=False
                     )
