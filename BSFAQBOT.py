@@ -1258,8 +1258,8 @@ async def on_message(message):
                             description=(
                                 '**Invalid FAQ tag**\n'
                                 f'There is no FAQ with the tag "{faq_tag}", '
-                                f"use '{BOT_DATA.FAQ_QUERY_PREFIX}"
-                                f"{BOT_DATA.FAQ_MANAGEMENT_COMMANDS['list'][0]}"
+                                f"use '{BOT_DATA.BOT_COMMAND_PREFIX}"
+                                f"{BOT_DATA.COMMAND_PREFIXES['list']}"
                                 "\' to list out FAQs"
                             ),
                             colour=discord.Colour.red()
