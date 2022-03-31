@@ -6,6 +6,7 @@ import datetime
 import discord
 from fuzzywuzzy import fuzz
 
+
 def loadConfig():
     default_config = {
         'allow_bug_reports': False,
@@ -22,12 +23,15 @@ def loadConfig():
             config_json[key] = default_config[key]
     return config_json
 
+
 CONFIG = loadConfig()
+
 
 def dumpConfig():
     config_path = os.path.join(os.getcwd(), 'config.json')
     with open(config_path, 'w') as f:
         json.dump(CONFIG, f, indent=4)
+
 
 class BOT_DATA:
 
@@ -66,7 +70,7 @@ class BOT_DATA:
         'delete': ['delete', 'remove', 'incinerate', 'shred'],
         'edit': ['edit', 'change', 'modify'],
         'recycle': ['recycle', 'bin', 'faq-bin'],
-        'download': ['export', 'download'],
+        'download': ['export'],
         'bug-report-enabled': ['r-enabled', 'enable-reporting', 'bug-report'],
         'bug-report-cooldown': ['r-cooldown', 'reporting-cooldown', 'bug-report-cooldown']
     }
@@ -88,10 +92,11 @@ class BOT_DATA:
     # delay (in seconds) between bug reports by users
     ALLOW_BUG_REPORTS = (
         CONFIG['allow_bug_reports'] if BUG_REPORT_CHANNEL_ID != 0 else False)
-    
+
     with open(APPROVED_SERVERS_FILENAME, 'r') as f:
         APPROVED_SERVERS = list([line.strip() for line in f.readlines()])
     # load the approved servers IDs from the file
+
 
 def paginate_list(l, n):
     '''
@@ -101,6 +106,7 @@ def paginate_list(l, n):
     Returns l (list) paginated to pages of n (int) size
     '''
     return [l[i:i+n] for i in range(0, len(l), n)]
+
 
 def loadFaqFile():
     '''
@@ -113,6 +119,7 @@ def loadFaqFile():
     with open(faq_data_path, 'r') as f:
         return json.load(f)
 
+
 def dumpFaqFile(faq):
     '''
     This function dumps a dict into the FAQ file.
@@ -121,6 +128,7 @@ def dumpFaqFile(faq):
     faq_data_path = os.path.join(os.getcwd(), BOT_DATA.FAQ_DATA_FILENAME)
     with open(faq_data_path, 'w') as f:
         json.dump(faq, f, indent=4)
+
 
 def addFaq(new_faq):
     '''
@@ -131,6 +139,7 @@ def addFaq(new_faq):
     faq_data['faq_data'] = sorted(
         faq_data['faq_data'], key=lambda faq: faq['title'])
     dumpFaqFile(faq_data)
+
 
 def deleteFaq(faq_tag):
     '''
@@ -148,11 +157,12 @@ def deleteFaq(faq_tag):
     with open(faq_data_path, 'r') as f:
         backup = json.load(f)
     backup.append(faq)
-    with open(faq_data_path,'w') as f:
+    with open(faq_data_path, 'w') as f:
         f.write(json.dumps(backup, indent=4))
 
     faq_data['faq_data'].remove(faq)
     dumpFaqFile(faq_data)
+
 
 def findFaqByTag(faq_tag):
     '''Returns the faq found by tag, if no FAQ exists, returns None'''
@@ -160,6 +170,7 @@ def findFaqByTag(faq_tag):
     if len(found) == 0:
         return None
     return found[0]
+
 
 def searchFaqByTag(faq_tag):
     '''
@@ -195,6 +206,7 @@ def searchFaqByTag(faq_tag):
 
     return found[0]
 
+
 def findMultipleFaqsByTag(faq_tag, count=10):
     '''
     Returns the faq found by tag, otherwise tries to search for FAQ,
@@ -222,9 +234,11 @@ def findMultipleFaqsByTag(faq_tag, count=10):
 
     return list([i[1] for i in sorted_distances])[:count]
 
+
 def flatten(l):
     '''Flattens a list.'''
     return [item for sublist in l for item in sublist]
+
 
 def getValidAliases(aliases):
     '''
@@ -236,16 +250,19 @@ def getValidAliases(aliases):
               and (not a in BOT_DATA.BLACKLISTED_TAGS)])
     return v
 
+
 def check(author, channel):
     '''Runs a check to confirm message author'''
     def inner_check(message):
         return message.author == author and message.channel == channel
     return inner_check
 
+
 BUG_REPORTS_BY_USERS = {}
 
 # client = commands.Bot(command_prefix = BOT_DATA.BOT_COMMAND_PREFIX)
 client = discord.Client()
+
 
 @client.event
 async def on_ready():
@@ -259,6 +276,7 @@ async def on_ready():
         )
     )
 
+
 @client.event
 async def on_message(message):
     if message.author == client.user:
@@ -270,7 +288,7 @@ async def on_message(message):
     except:
         roles = []
     channel = message.channel
-    
+
     server_id = str(message.guild.id)
     # this is the actual id of the server that the message was sent in
     # converted it to a string, because strings are nicer I guess
@@ -298,7 +316,7 @@ async def on_message(message):
             command_split = command_request.split(' ')
             main_command = command_split[0]
 
-            if main_command in BOT_DATA.COMMAND_PREFIXES['list']:
+            if main_command == BOT_DATA.COMMAND_PREFIXES['list']:
                 # list out all the FAQ tags and text
 
                 all_faq_tags = []
@@ -337,7 +355,7 @@ async def on_message(message):
 
             if main_command == BOT_DATA.COMMAND_PREFIXES['bug'] and not CONFIG[
                     'allow_bug_reports']:
-                # the user wants to report a bug, but bug reports are turned 
+                # the user wants to report a bug, but bug reports are turned
                 # off
                 embed = discord.Embed(
                     title='',
@@ -353,7 +371,7 @@ async def on_message(message):
                 await channel.send(embed=embed)
 
             if main_command == BOT_DATA.COMMAND_PREFIXES['bug'] and CONFIG['allow_bug_reports']:
-                # allows a user to create a bug report, which gets sent to a channel in 
+                # allows a user to create a bug report, which gets sent to a channel in
                 # another server
                 report_size = (20, 1200)
                 last_created_bug_report = BUG_REPORTS_BY_USERS.get(
@@ -429,7 +447,7 @@ async def on_message(message):
                     )
                     await channel.send(embed=embed)
                     return
-                
+
                 current_time = datetime.datetime.fromtimestamp(
                     time.time()).strftime("%Y-%m-%d %H:%M:%S")
                 embed_report = discord.Embed(
@@ -494,7 +512,7 @@ async def on_message(message):
 
                 for faq_entry in found:
                     embed.add_field(
-                        name=faq_entry['title'].title(),
+                        name=faq_entry['title'],
                         value=', '.join(faq_entry['tag']),
                         inline=False
                     )
@@ -704,7 +722,7 @@ async def on_message(message):
                         file=discord.File(faq_data_filename_path))
 
             if (BOT_DATA.FAQ_MANAGEMENT_ROLE in [role.name for role in roles]) and (server_id in BOT_DATA.APPROVED_SERVERS):
-                # print("[DEBUG] caller has adequate privellages to use 
+                # print("[DEBUG] caller has adequate privellages to use
                 # !fm commands this this command")
 
                 if action in BOT_DATA.FAQ_MANAGEMENT_COMMANDS['add']:
@@ -884,9 +902,16 @@ async def on_message(message):
                         }
 
                         if faq_description_reply.attachments:
-                            new_faq["image"] = str(faq_description_reply.attachments).split("url='")[1][:-3]
-                        # tries to set image link
-
+                            if len(faq_description_reply.attachments) > 1:
+                                embed_error = discord.Embed(
+                                    title='Warning!',
+                                    description=f'''More than one image image was attached! Using only one.''',
+                                    colour=discord.Colour.red()
+                                )
+                                await channel.send(embed=embed_error)
+                            new_faq["image"] = str(
+                                faq_description_reply.attachments[0])
+                        # sets link for attachment or throws a warning if multiple pictures were given
 
                         addFaq(new_faq)
 
@@ -1212,12 +1237,19 @@ async def on_message(message):
                         deleteFaq(found_faq['tag'][0])
                         found_faq['info'] = response
                         if msgresp.attachments:
+                            if len(msgresp.attachments) > 1:
+                                embed_error = discord.Embed(
+                                    title='Warning!',
+                                    description=f'''More than one image image was attached! Using only one.''',
+                                    colour=discord.Colour.red()
+                                )
+                                await channel.send(embed=embed_error)
                             found_faq["image"] = str(
-                                msgresp.attachments).split("url='")[1][:-3]
-                        # tries to set image link
+                                msgresp.attachments[0])
+                        # sets link for attachment or throws a warning if multiple pictures were given
                         else:
-                            found_faq["image"] = ''
-                        # if no attachments, resets the image field
+                            found_faq.pop("image")
+                        # if no attachments, removes the image field
                         addFaq(found_faq)
 
                         embed = discord.Embed(
@@ -1408,7 +1440,8 @@ if not os.path.exists(os.path.join(os.getcwd(), BOT_DATA.FAQ_DATA_FILENAME)):
 faq_data = loadFaqFile()
 
 print("[DEBUG] loaded faq data")
-# print(json.dumps(faq_data,indent=2))
+# print(json.dumps(faq_data, indent=2))
 
 client.run(open(os.path.join(os.getcwd(), BOT_DATA.TOKEN_FILENAME),
                 'r').readline().strip())
+                
