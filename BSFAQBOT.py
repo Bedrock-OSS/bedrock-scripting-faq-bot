@@ -1240,7 +1240,8 @@ async def on_message(message):
                             if len(msgresp.attachments) > 1:
                                 embed_error = discord.Embed(
                                     title='Warning!',
-                                    description=f'''More than one image image was attached! Using only one.''',
+                                    description=f'''More than one image was attached! Using only one.''',
+
                                     colour=discord.Colour.red()
                                 )
                                 await channel.send(embed=embed_error)
