@@ -70,7 +70,7 @@ class BOT_DATA:
         'delete': ['delete', 'remove', 'incinerate', 'shred'],
         'edit': ['edit', 'change', 'modify'],
         'recycle': ['recycle', 'bin', 'faq-bin'],
-        'download': ['export'],
+        'download': ['export', 'download'],
         'bug-report-enabled': ['r-enabled', 'enable-reporting', 'bug-report'],
         'bug-report-cooldown': ['r-cooldown', 'reporting-cooldown', 'bug-report-cooldown']
     }
