@@ -1249,7 +1249,10 @@ async def on_message(message):
                                 msgresp.attachments[0])
                         # sets link for attachment or throws a warning if multiple pictures were given
                         else:
-                            found_faq.pop("image")
+                            try:
+                                found_faq.pop("image")
+                            except:
+                                pass
                         # if no attachments, removes the image field
                         addFaq(found_faq)
 
