@@ -428,7 +428,7 @@ async def on_message(message):
                 if bug_report.lower() == 'x':
                     embed = discord.Embed(
                         title='',
-                        description='**cancelled creation of bug report**',
+                        description='**Cancelled creation of bug report**',
                         colour=discord.Colour.red())
                     await channel.send(embed=embed)
                     return
