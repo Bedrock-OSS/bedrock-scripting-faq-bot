@@ -358,7 +358,7 @@ async def on_message(message):
                         'Bug reports have been disabled, either temporarily '
                         'or permanently\n'
                         'If you still need to submit a bug,\n'
-                        'DM @MACHINE_BUILDER#2245, @SirLich#1658 or MJ105#0448\n'
+                        'DM MJ105#0448 or use\n<https://github.com/Bedrock-OSS/bedrock-scripting-faq-bot/issues>\n'
                     ),
                     colour=discord.Colour.red()
                 )
