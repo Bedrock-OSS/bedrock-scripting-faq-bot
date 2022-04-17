@@ -748,6 +748,7 @@ async def on_message(message):
                         return
                     newChannel = int(command_split[1])
                     CONFIG['bug_report_channel'] = newChannel
+                    BOT_DATA.BUG_REPORT_CHANNEL_ID = CONFIG['bug_report_channel']
                     dumpConfig()
 
                     embed = discord.Embed(
