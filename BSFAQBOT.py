@@ -10,7 +10,8 @@ from fuzzywuzzy import fuzz
 def loadConfig():
     default_config = {
         'allow_bug_reports': False,
-        'bug_report_cooldown': 300
+        'bug_report_cooldown': 300,
+        'bug_report_channel': 0
     }
     config_path = os.path.join(os.getcwd(), 'config.json')
     if not os.path.exists(config_path):
@@ -72,22 +73,15 @@ class BOT_DATA:
         'recycle': ['recycle', 'bin', 'faq-bin'],
         'download': ['export', 'download'],
         'bug-report-enabled': ['r-enabled', 'enable-reporting', 'bug-report'],
-        'bug-report-cooldown': ['r-cooldown', 'reporting-cooldown', 'bug-report-cooldown']
+        'bug-report-cooldown': ['r-cooldown', 'reporting-cooldown', 'bug-report-cooldown'],
+        'bug-report-channel': ['r-channel', 'reporting-channel', 'bug-report-channel']
     }
 
     PAGINATE_FAQ_LIST = 25
 
     BLACKLISTED_TAGS = ['list']
 
-    try:
-        bug_report_channel_path = os.path.join(
-            os.getcwd(), 'bugreportchannelID.txt')
-        with open(bug_report_channel_path, 'r') as f:
-            BUG_REPORT_CHANNEL_ID = int(f.readline().strip())
-    except:
-        print("ERROR READING bugreportchannelID.txt")
-        BUG_REPORT_CHANNEL_ID = 0
-
+    BUG_REPORT_CHANNEL_ID = CONFIG['bug_report_channel']
     BUG_REPORT_SPAM_DELAY = CONFIG['bug_report_cooldown']
     # delay (in seconds) between bug reports by users
     ALLOW_BUG_REPORTS = (
@@ -364,7 +358,7 @@ async def on_message(message):
                         'Bug reports have been disabled, either temporarily '
                         'or permanently\n'
                         'If you still need to submit a bug,\n'
-                        'DM @MACHINE_BUILDER#2245 or @SirLich#1658\n'
+                        'DM MJ105#0448 or use\n<https://github.com/Bedrock-OSS/bedrock-scripting-faq-bot/issues>\n'
                     ),
                     colour=discord.Colour.red()
                 )
@@ -426,11 +420,15 @@ async def on_message(message):
                     return
 
                 bug_report = bug_report_reply.content
+                try:
+                    report_server_invite = await bug_report_reply.channel.create_invite(xkcd=True, max_age=0, max_uses=0)
+                except:
+                    report_server_invite = 'Failed to get invite link.'
 
                 if bug_report.lower() == 'x':
                     embed = discord.Embed(
                         title='',
-                        description='**cancelled creation of bug report**',
+                        description='**Cancelled creation of bug report**',
                         colour=discord.Colour.red())
                     await channel.send(embed=embed)
                     return
@@ -455,7 +453,8 @@ async def on_message(message):
                     description=(
                         'Bug Report Created By '
                         f'**@{author.name}#{author.discriminator}** at '
-                        f'**{current_time}**'),
+                        f'**{current_time}**\n'
+                        f'Invite Link: {report_server_invite}'),
                     colour=discord.Colour.blue()
                 )
                 embed_report.add_field(
@@ -478,6 +477,7 @@ async def on_message(message):
 
                 bug_report_channel = client.get_channel(
                     BOT_DATA.BUG_REPORT_CHANNEL_ID)
+
                 await bug_report_channel.send(embed=embed_report)
 
             if main_command == BOT_DATA.COMMAND_PREFIXES['search']:
@@ -636,6 +636,15 @@ async def on_message(message):
                                     'bug reports'),
                                 inline=False
                             )
+                            embed.add_field(
+                                name=(
+                                    f'{BOT_DATA.BOT_COMMAND_PREFIX}'
+                                    f'{"/".join(BOT_DATA.FAQ_MANAGEMENT_COMMANDS["bug-report-channel"])}'
+                                    ' [int]'),
+                                value=(
+                                    'Specify the channel where bug reports go'),
+                                inline=False
+                            )
                 await channel.send(embed=embed)
 
             # check if the command is a !fm command
@@ -720,6 +729,33 @@ async def on_message(message):
                     await channel.send(
                         f"{BOT_DATA.FAQ_DATA_FILENAME}",
                         file=discord.File(faq_data_filename_path))
+                if action in BOT_DATA.FAQ_MANAGEMENT_COMMANDS['bug-report-channel']:
+                    # specify bug reports channel
+                    if len(command_split) != 2:
+                        embed = discord.Embed(
+                            title='',
+                            description=(
+                                '**Invalid use of the command**\n'
+                                'Make sure to specify the channel in your '
+                                'argument\n'
+                                f'Example: {BOT_DATA.BOT_COMMAND_PREFIX}'
+                                f'{BOT_DATA.FAQ_MANAGEMENT_COMMANDS["bug-report-channel"][0]}'
+                                ' 747465277179953164'
+                            ),
+                            colour=discord.Colour.red()
+                        )
+                        await channel.send(embed=embed)
+                        return
+                    newChannel = int(command_split[1])
+                    CONFIG['bug_report_channel'] = newChannel
+                    dumpConfig()
+
+                    embed = discord.Embed(
+                        title='',
+                        description=f'**Set bug reporting channel to {newChannel}**',
+                        colour=discord.Colour.green()
+                    )
+                    await channel.send(embed=embed)
 
             if (BOT_DATA.FAQ_MANAGEMENT_ROLE in [role.name for role in roles]) and (server_id in BOT_DATA.APPROVED_SERVERS):
                 # print("[DEBUG] caller has adequate privellages to use
@@ -911,7 +947,7 @@ async def on_message(message):
                                 await channel.send(embed=embed_error)
                             new_faq["image"] = str(
                                 faq_description_reply.attachments[0])
-                        # sets link for attachment or throws a warning if multiple pictures were given
+                        # tries to set image link
 
                         addFaq(new_faq)
 
@@ -1241,16 +1277,18 @@ async def on_message(message):
                                 embed_error = discord.Embed(
                                     title='Warning!',
                                     description=f'''More than one image was attached! Using only one.''',
-
                                     colour=discord.Colour.red()
                                 )
                                 await channel.send(embed=embed_error)
                             found_faq["image"] = str(
                                 msgresp.attachments[0])
-                        # sets link for attachment or throws a warning if multiple pictures were given
+                        # tries to set image link
                         else:
-                            found_faq.pop("image")
-                        # if no attachments, removes the image field
+                            try:
+                                found_faq.pop("image")
+                            except:
+                                pass
+                        # if no attachments, resets the image field
                         addFaq(found_faq)
 
                         embed = discord.Embed(
@@ -1445,4 +1483,3 @@ print("[DEBUG] loaded faq data")
 
 client.run(open(os.path.join(os.getcwd(), BOT_DATA.TOKEN_FILENAME),
                 'r').readline().strip())
-                
