@@ -420,11 +420,7 @@ async def on_message(message):
                     return
 
                 bug_report = bug_report_reply.content
-                try:
-                    report_server_invite = await bug_report_reply.channel.create_invite(xkcd=True, max_age=0, max_uses=0)
-                except:
-                    report_server_invite = 'Failed to get invite link.'
-
+                
                 if bug_report.lower() == 'x':
                     embed = discord.Embed(
                         title='',
@@ -453,8 +449,7 @@ async def on_message(message):
                     description=(
                         'Bug Report Created By '
                         f'**@{author.name}#{author.discriminator}** at '
-                        f'**{current_time}**\n'
-                        f'Invite Link: {report_server_invite}'),
+                        f'**{current_time}**'),
                     colour=discord.Colour.blue()
                 )
                 embed_report.add_field(
