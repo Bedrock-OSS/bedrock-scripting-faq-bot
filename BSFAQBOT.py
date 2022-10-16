@@ -255,7 +255,10 @@ def check(author, channel):
 BUG_REPORTS_BY_USERS = {}
 
 # client = commands.Bot(command_prefix = BOT_DATA.BOT_COMMAND_PREFIX)
-client = discord.Client()
+intents = discord.Intents.default()
+intents.message_content = True
+
+client = discord.Client(intents=intents)
 
 
 @client.event
