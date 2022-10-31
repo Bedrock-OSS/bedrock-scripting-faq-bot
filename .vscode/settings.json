@@ -1,0 +1,16 @@
+{
+    "json.schemas": [
+        {
+            "fileMatch": [
+                "/config/ids_PROD.jsonc",
+                "/config/ids.jsonc",
+                "/config/ids.json"
+            ],
+            "url": "./.vscode/schemas/ids.json"
+        },
+        {
+            "fileMatch": ["/config/config.json", "/config/config.jsonc"],
+            "url": "./.vscode/schemas/config.json"
+        }
+    ]
+}
