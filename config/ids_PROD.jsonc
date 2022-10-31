@@ -1,0 +1,22 @@
+[
+    {
+        "server": 494194063730278411, // Bedrock-OSS
+        "roles": {
+            "admin": 902014446698913802,
+            "faq_management": 748011619149283349
+        },
+        "channels": {
+            "bug_report": 0
+        }
+    },
+    {
+        "server": 523663022053392405, // Bedrock Add-Ons
+        "roles": {
+            "admin": 523873324682444810,
+            "faq_management": 739985629731094568
+        },
+        "channels": {
+            "bug_report": 0
+        }
+    }
+]

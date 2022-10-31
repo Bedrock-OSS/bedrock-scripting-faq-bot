@@ -1,22 +1,44 @@
 # bedrock-scripting-faq-bot
 A bot for the Bedrock Addons Community Discord server
 
-# requirements
+# Contributing
 
-## packages
+## Setting up Python
 
-+ https://discordpy.readthedocs.io/en/latest/intro.html
-+ https://pypi.org/project/fuzzywuzzy/
-+ https://pypi.org/project/python-Levenshtein/ (optional)
+Start by forking the repository.
 
-## files
+Clone it on your device and run:
 
-+ token.txt file in same directory as script.
-  token.txt should contain the Discord bot token from https://discord.com/developers/applications/[your_app]/bot/
-+ bugreportchannelID.txt in the same directory as script. Should contain the channel ID of the channel where the bot posts bug reports. This can be a group DM, or just a general   channel on a server... You can get a channel ID by right-clicking on a channel in discord, and at the bottom of the menu, select [Copy ID]
+```bash
+python -m venv .venv
 
-## discord server
+<path/to/.venv>/Scripts/activate
 
-+ role: faq-management: the role for people who can create FAQs
-+ role: bsb-admin: the role for people who can use the bot's admin commands, like bug reporting
+pip install -r requirements.txt
+```
 
+## Files
+
+### ENV
+
+Then create a file called `.env` in the main directory of this repository and add your bot token:
+
+```
+TOKEN=<your bot token>
+```
+
+### Config
+
+And in [`config`](./config) create a new file called `ids.json` (or `ids.jsonc`) as well. Input all your test-server roles like they are written in [`ids_PROD.jsonc`](./config/ids_PROD.jsonc) (there is a json scheme defined, which helps you create all the necessary attributes).
+
+Last step: If you already have a WORKING `faq.json` file, add in inside [`config`](./config) as `faq.json`. Otherwise the bot will create an empty one for you.
+
+WARNING: This bot does not work with json-files created from the old `bedrock-scripting-faq-bot` out of the box. But to make them compatible, simply rename all the `info`-fields to `description`.
+
+## Running the bot
+
+Now you can start the bot by running:
+
+```bash
+python main.py
+```

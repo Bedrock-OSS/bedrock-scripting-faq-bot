@@ -1,0 +1,15 @@
+{
+    "title": "An object with all the configuration keys",
+    "markdownDescription": "Each entry needs to be structured like: `\"configName\": configValue`",
+    "description": "Each entry needs to be structured like:\n\"configName\": configValue",
+    "type": "object",
+    "properties": {
+        "allow_bug_reports": {
+            "type": "boolean"
+        },
+        "bug_report_cooldown": {
+            "type": "integer"
+        }
+    },
+    "required": ["allow_bug_reports", "bug_report_cooldown"]
+}
