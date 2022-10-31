@@ -33,7 +33,30 @@ And in [`config`](./config) create a new file called `ids.json` (or `ids.jsonc`)
 
 Last step: If you already have a WORKING `faq.json` file, add in inside [`config`](./config) as `faq.json`. Otherwise the bot will create an empty one for you.
 
-WARNING: This bot does not work with json-files created from the old `bedrock-scripting-faq-bot` out of the box. But to make them compatible, simply rename all the `info`-fields to `description`.
+WARNING: This bot does not work with json-files created from the old `bedrock-scripting-faq-bot` out of the box. But to make them compatible, simply
+- rename all the `info`-fields to `description` 
+- rename all the `tag`-fields to `tags`
+- remove the `faq_data` object that surrounds the data
+
+It should look something like this:
+
+```json
+[
+    {
+        "tags": ["...", ...],
+        "title": "...",
+        "description": "...",
+        "image": "..."
+    },
+    {
+        "tags": ["...", ...],
+        "title": "...",
+        "description": "...",
+        "image": "..."
+    },
+    ...
+]
+```
 
 ## Running the bot
 
