@@ -32,3 +32,8 @@ class Ids:
 @dataclass
 class Texts:
     EMBED_FOOTER = 'brought to you by {}'
+
+
+@dataclass
+class Consts:
+    CONFIG_PATH = 'config/config.json'
