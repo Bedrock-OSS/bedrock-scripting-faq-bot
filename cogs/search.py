@@ -7,12 +7,17 @@ from utils.algolia import AlgoliaUtil
 from utils.config import ConfigUtil
 from utils.variables import Consts
 
-def create_result_embed(res: AlgoliaResult):
+
+def create_result_embed(res: AlgoliaResult, longest: int):
     embed = discord.Embed(
-        title=res.heading,
+        title=res.header,
         url=res.url,
-        description=d.replace() if (d:=res.description) else None
+        description=res.description,
+        color=discord.Color.blurple(),
     )
+    embed.set_thumbnail(url=f'attachment://{res.type.value}.png')
+
+    return embed
 
 
 class Search(commands.Cog):
@@ -35,7 +40,19 @@ class Search(commands.Cog):
         '''Searches the wiki for the given query'''
         ans = await self.algolia.search_query(query=query)
 
-        await ctx.send_response(ans)
+        longest = max([len(res.header) for res in ans] +
+                      [len(res.description) for res in ans if res.description])
+
+        # create an embed for every result
+        embeds = [create_result_embed(res, longest) for res in ans]
+
+        # get all result types
+        types = [res.type.value for res in ans]
+
+        # create a list of all files needed for the result-type thumbnail
+        files = [discord.File(f'./assets/{type}.png') for type in types]
+
+        await ctx.send_response(files=files, embeds=embeds)
 
 
 def setup(bot: discord.Bot):
