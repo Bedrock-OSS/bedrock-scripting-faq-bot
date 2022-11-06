@@ -1,10 +1,18 @@
 import discord
 from discord.ext import commands
+from classes.algolia import AlgoliaResult
 
+from main import ids
 from utils.algolia import AlgoliaUtil
 from utils.config import ConfigUtil
-from main import ids
 from utils.variables import Consts
+
+def create_result_embed(res: AlgoliaResult):
+    embed = discord.Embed(
+        title=res.heading,
+        url=res.url,
+        description=d.replace() if (d:=res.description) else None
+    )
 
 
 class Search(commands.Cog):

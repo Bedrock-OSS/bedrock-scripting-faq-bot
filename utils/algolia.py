@@ -1,5 +1,4 @@
-import json
-import requests
+# import requests
 
 import aiohttp
 
@@ -33,6 +32,8 @@ class AlgoliaUtil:
             'query': query,
             'hitsPerPage': 5,
         })
+
+        print(ans['hits'][0]['_highlightResult']['hierarchy'])
 
         return [
             AlgoliaResult(

@@ -12,7 +12,7 @@ Clone it on your device and run:
 ```bash
 python -m venv .venv
 
-<path/to/.venv>/Scripts/activate
+source <path/to/.venv>/bin/activate
 
 pip install -r requirements.txt
 ```
