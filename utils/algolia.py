@@ -3,6 +3,7 @@
 import aiohttp
 
 from classes.algolia import AlgoliaResult, AlgoliaResultType
+from bs4 import BeautifulSoup
 
 
 class AlgoliaUtil:
@@ -18,15 +19,13 @@ class AlgoliaUtil:
             'X-Algolia-API-Key': self.key
         }
 
-    async def _get_data(self, path: str, data: dict[str, str]):
+    async def _get_data(self, path: str, data: dict[str, str | int]):
         async with aiohttp.ClientSession() as session:
             async with session.post(
                     self.base_url.format(self.app, path),
                     headers=self.headers,
                     json={
                         **data,
-                        'hitsPerPage':
-                        5,
                         'highlightPreTag':
                         '***',
                         'highlightPostTag':
@@ -46,11 +45,14 @@ class AlgoliaUtil:
             ) as ans:
                 return await ans.json()
 
-    async def search_query(self, query: str) -> list[AlgoliaResult]:
+    async def search_query(self,
+                           query: str,
+                           max: int = 5) -> list[AlgoliaResult]:
         ans = await self._get_data(
             f'/1/indexes/{self.index_name}/query',
             {
                 'query': query,
+                'hitsPerPage': min(max, 5),
             },
         )
 
@@ -96,6 +98,19 @@ class AlgoliaUtil:
                     ))
 
         return out
+
+    async def get_metadata(self, url: str):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as ans:
+                soup = BeautifulSoup(await ans.read(), 'html.parser')
+                title = soup.find('meta', property='og:title')
+                description = soup.find('meta', property='og:description')
+                image = soup.find('meta', property='og:image')
+                site = soup.find('meta', property='og:site')
+
+                print(title, description, image, site)
+
+                return await ans.text()
 
 
 # ans = requests.post(

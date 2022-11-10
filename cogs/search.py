@@ -5,17 +5,33 @@ from classes.algolia import AlgoliaResult
 from main import ids
 from utils.algolia import AlgoliaUtil
 from utils.config import ConfigUtil
-from utils.variables import Consts
+from utils.variables import Consts, Texts
+from collections import OrderedDict
 
 
-def create_result_embed(res: AlgoliaResult, longest: int):
+def create_result_embed(term: str, res: list[AlgoliaResult], bot: discord.Bot):
+    # get wiki-group to mention it
+    cmd = bot.get_application_command('wiki', type=discord.SlashCommandGroup)
+
+    # create embed
     embed = discord.Embed(
-        title=res.header,
-        url=res.url,
-        description=res.description,
+        title=f'Your search for ***{term}*** returned:',
+        description=
+        f'For more information on a result, use </wiki details:{cmd.id}>',  # type: ignore
         color=discord.Color.blurple(),
     )
-    embed.set_thumbnail(url=f'attachment://{res.type.value}.png')
+
+    # add a field for every entry
+    for i, field in enumerate(res, 1):
+        embed.add_field(
+            name=
+            f'({i}) {field.header}{f" - {d}" if (d := field.description) else ""}',
+            value=field.url,
+            inline=False,
+        )
+
+    embed.set_footer(text=Texts.EMBED_FOOTER.format(
+        bot.user.name))  # type: ignore
 
     return embed
 
@@ -24,6 +40,29 @@ class Search(commands.Cog):
 
     def __init__(self, bot: discord.Bot) -> None:
         self.bot = bot
+        self._search_cache: OrderedDict[int,
+                                        list[AlgoliaResult]] = OrderedDict()
+
+    @property
+    def search_cache(self):
+        return self._search_cache
+
+    def add_search_cache(self, key: int, val: list[AlgoliaResult]):
+        '''
+        Cache for search results
+
+        This method adds an new AlgoliaResult to the search_cache, so the user can request details with `/wiki details`.
+        
+        Only 10 AlgoliaResults are cached, the oldest will be deleted.
+
+        :param key: The Key, most of the time it is the author.id
+        :type key: int
+        :param val: The AlgoliaResults the user requested
+        :type val: list[AlgoliaResult]
+        '''
+        self._search_cache[key] = val  # type: ignore
+        if len(self._search_cache.keys()) > 3:
+            self._search_cache.popitem(False)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -35,24 +74,64 @@ class Search(commands.Cog):
             self.config.data.algolia_index_name,
         )
 
-    @commands.slash_command(guild_ids=ids.servers)
-    async def search(self, ctx: discord.ApplicationContext, query: str):
-        '''Searches the wiki for the given query'''
-        ans = await self.algolia.search_query(query=query)
+    wiki = discord.SlashCommandGroup('wiki',
+                                     'Search the wiki',
+                                     guild_ids=ids.servers)
 
-        longest = max([len(res.header) for res in ans] +
-                      [len(res.description) for res in ans if res.description])
+    @wiki.command()
+    @discord.option('query', str, description='The query to search for')
+    @discord.option(
+        'max',
+        int,
+        description='The maximum amount of results to return. maximum is 5')
+    async def search(self,
+                     ctx: discord.ApplicationContext,
+                     query: str,
+                     max: int = 5):
+        '''Searches the wiki for the given query'''
+        ans = await self.algolia.search_query(query=query, max=max)
+
+        self.add_search_cache(
+            ctx.author.id,  # type: ignore
+            ans,
+        )  # type: ignore
 
         # create an embed for every result
-        embeds = [create_result_embed(res, longest) for res in ans]
+        embed = create_result_embed(query, ans, self.bot)
 
-        # get all result types
-        types = [res.type.value for res in ans]
+        await ctx.send_response(embed=embed)
 
-        # create a list of all files needed for the result-type thumbnail
-        files = [discord.File(f'./assets/{type}.png') for type in types]
+    @wiki.command()
+    async def details(self, ctx: discord.ApplicationContext, id: int):
+        '''Show additional details for a search result'''
+        id -= 1
+        # get cached results
+        # if there is nothing cached, send error
+        try:
+            res = self.search_cache[ctx.author.id]  # type: ignore
+        except KeyError:
+            # get wiki-group to mention it
+            cmd = self.bot.get_application_command(
+                'wiki', type=discord.SlashCommandGroup)
+            await ctx.send_response(
+                'Could not find your last search-request! '
+                f'Please use </wiki search:{cmd.id}> to get '  # type: ignore
+                'a list of search results before using this command.')
+            return
 
-        await ctx.send_response(files=files, embeds=embeds)
+        # get specific result
+        # if the id does not exist, send error
+        try:
+            ans = res[id]
+        except IndexError:
+            await ctx.send_response(
+                f'The id {id} does not exist in your last search request. '
+                f'Please use an id between 0 and {len(res)}.')
+            return
+
+        # get metadata
+        data = await self.algolia.get_metadata(ans.url)
+        await ctx.send_response('data')
 
 
 def setup(bot: discord.Bot):
