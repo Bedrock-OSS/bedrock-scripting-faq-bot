@@ -9,7 +9,22 @@
         },
         "bug_report_cooldown": {
             "type": "integer"
+        },
+        "algolia_app_id": {
+            "type": "string"
+        },
+        "algolia_auth_key": {
+            "type": "string"
+        },
+        "algolia_index_name": {
+            "type": "string"
         }
     },
-    "required": ["allow_bug_reports", "bug_report_cooldown"]
+    "required": [
+        "allow_bug_reports",
+        "bug_report_cooldown",
+        "algolia_app_id",
+        "algolia_auth_key",
+        "algolia_index_name"
+    ]
 }
