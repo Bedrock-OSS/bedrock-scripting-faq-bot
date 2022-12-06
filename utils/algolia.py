@@ -1,5 +1,6 @@
 # import requests
 
+from typing import Tuple
 import aiohttp
 
 from classes.algolia import AlgoliaResult, AlgoliaResultType
@@ -27,9 +28,9 @@ class AlgoliaUtil:
                     json={
                         **data,
                         'highlightPreTag':
-                        '***',
+                        '***__',
                         'highlightPostTag':
-                        '***',
+                        '__***',
                         'attributesToRetrieve': [
                             'hierarchy.lvl0', 'hierarchy.lvl1',
                             'hierarchy.lvl2', 'content', 'type', 'url'
@@ -99,18 +100,54 @@ class AlgoliaUtil:
 
         return out
 
-    async def get_metadata(self, url: str):
+    async def get_metadata(self,
+                           url: str) -> Tuple[str, str, str, str, str, str]:
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as ans:
                 soup = BeautifulSoup(await ans.read(), 'html.parser')
-                title = soup.find('meta', property='og:title')
-                description = soup.find('meta', property='og:description')
-                image = soup.find('meta', property='og:image')
-                site = soup.find('meta', property='og:site')
+                title: str = soup.find(
+                    'meta',
+                    attrs={
+                        'name': 'og:title'
+                    },
+                ).get('content')  # type: ignore
 
-                print(title, description, image, site)
+                description: str = soup.find(
+                    'meta',
+                    attrs={
+                        'name': 'og:description'
+                    },
+                ).get('content')  # type: ignore
 
-                return await ans.text()
+                image: str = soup.find(
+                    'meta',
+                    attrs={
+                        'name': 'og:image'
+                    },
+                ).get('content')  # type: ignore
+
+                image_alt: str = soup.find(
+                    'meta',
+                    attrs={
+                        'name': 'og:image:alt'
+                    },
+                ).get('content')  # type: ignore
+
+                site: str = soup.find(
+                    'meta',
+                    attrs={
+                        'name': 'og:site_name'
+                    },
+                ).get('content')  # type: ignore
+
+                url_full: str = soup.find(
+                    'meta',
+                    attrs={
+                        'name': 'og:url'
+                    },
+                ).get('content')  # type: ignore
+
+                return title, description, image, image_alt, site, url_full
 
 
 # ans = requests.post(

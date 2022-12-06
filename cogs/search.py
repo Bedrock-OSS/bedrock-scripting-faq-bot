@@ -9,7 +9,11 @@ from utils.variables import Consts, Texts
 from collections import OrderedDict
 
 
-def create_result_embed(term: str, res: list[AlgoliaResult], bot: discord.Bot):
+def create_result_embed(
+    term: str,
+    res: list[AlgoliaResult],
+    bot: discord.Bot,
+) -> discord.Embed:
     # get wiki-group to mention it
     cmd = bot.get_application_command('wiki', type=discord.SlashCommandGroup)
 
@@ -29,6 +33,29 @@ def create_result_embed(term: str, res: list[AlgoliaResult], bot: discord.Bot):
             value=field.url,
             inline=False,
         )
+
+    embed.set_footer(text=Texts.EMBED_FOOTER.format(
+        bot.user.name))  # type: ignore
+
+    return embed
+
+
+def create_details_embed(
+    title: str,
+    description: str,
+    image: str,
+    image_alt: str,
+    site: str,
+    url: str,
+    bot: discord.Bot,
+) -> discord.Embed:
+    embed = discord.Embed(title=title,
+                          description=description,
+                          url=url,
+                          color=discord.Color.blurple())
+
+    embed.set_author(name=site)
+    embed.set_thumbnail(url=image)
 
     embed.set_footer(text=Texts.EMBED_FOOTER.format(
         bot.user.name))  # type: ignore
@@ -61,7 +88,7 @@ class Search(commands.Cog):
         :type val: list[AlgoliaResult]
         '''
         self._search_cache[key] = val  # type: ignore
-        if len(self._search_cache.keys()) > 3:
+        if len(self._search_cache.keys()) > 10:
             self._search_cache.popitem(False)
 
     @commands.Cog.listener()
@@ -131,7 +158,10 @@ class Search(commands.Cog):
 
         # get metadata
         data = await self.algolia.get_metadata(ans.url)
-        await ctx.send_response('data')
+
+        # create and send embed
+        embed = create_details_embed(*data, self.bot)
+        await ctx.send_response(embed=embed)
 
 
 def setup(bot: discord.Bot):
