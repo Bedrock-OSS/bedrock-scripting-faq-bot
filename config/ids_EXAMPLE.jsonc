@@ -1,0 +1,22 @@
+[
+    {
+        "server": 0,
+        "roles": {
+            "admin": 0,
+            "faq_management": 0
+        },
+        "channels": {
+            "bug_report": 0
+        }
+    },
+    {
+        "server": 0,
+        "roles": {
+            "admin": 0,
+            "faq_management": 0
+        },
+        "channels": {
+            "bug_report": 0
+        }
+    }
+]

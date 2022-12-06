@@ -4,6 +4,7 @@ from discord.ext import commands
 from components.bug import BugReportModal
 from main import ids
 from utils.config import ConfigUtil
+from utils.variables import Consts
 
 
 class Bug(commands.Cog):
@@ -26,7 +27,7 @@ class Bug(commands.Cog):
         )
 
         # load config file
-        self.data = await ConfigUtil.create('config/config.json')
+        self.data = await ConfigUtil.create(Consts.CONFIG_PATH)
 
         # set BUG_REPORT_COOLDOWN
         Bug.BUG_REPORT_COOLDOWN = self.data.data.bug_report_cooldown

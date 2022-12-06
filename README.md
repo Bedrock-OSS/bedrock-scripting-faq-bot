@@ -12,7 +12,7 @@ Clone it on your device and run:
 ```bash
 python -m venv .venv
 
-<path/to/.venv>/Scripts/activate
+source <path/to/.venv>/bin/activate
 
 pip install -r requirements.txt
 ```
@@ -29,7 +29,7 @@ TOKEN=<your bot token>
 
 ### Config
 
-And in [`config`](./config) create a new file called `ids.json` (or `ids.jsonc`) as well. Input all your test-server roles like they are written in [`ids_PROD.jsonc`](./config/ids_PROD.jsonc) (there is a json scheme defined, which helps you create all the necessary attributes).
+And in [`config`](./config) create a new file called `ids.json` (or `ids.jsonc`) as well. Input all your test-server roles like they are written in [`ids_EXAMPLE.jsonc`](./config/ids_EXAMPLE.jsonc) (there is a json scheme defined, which helps you create all the necessary attributes).
 
 Last step: If you already have a WORKING `faq.json` file, add in inside [`config`](./config) as `faq.json`. Otherwise the bot will create an empty one for you.
 

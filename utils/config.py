@@ -32,7 +32,7 @@ class ConfigUtil:
                     ensure_ascii=True,
                     indent=4,
                     quote_keys=True,
-                    trailing_commas=False))
+                    trailing_commas=False) + '\n')
 
     async def change_config(self, key: str, value: Any) -> Config | None:
         '''

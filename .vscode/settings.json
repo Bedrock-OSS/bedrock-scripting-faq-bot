@@ -2,9 +2,10 @@
     "json.schemas": [
         {
             "fileMatch": [
-                "/config/ids_PROD.jsonc",
                 "/config/ids.jsonc",
-                "/config/ids.json"
+                "/config/ids.json",
+                "/config/ids_*.json",
+                "/config/ids_*.jsonc"
             ],
             "url": "./.vscode/schemas/ids.json"
         },
