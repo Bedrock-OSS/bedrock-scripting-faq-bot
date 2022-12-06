@@ -68,7 +68,7 @@ class Faq(commands.Cog):
         :return: A list of all pages
         :rtype: list[discord.Embed]
         '''
-        # determine if user is on mobile (if user is on desktop and mobile, desktop will be preffered)
+        # determine if user is on mobile (if user is on desktop and mobile, desktop will be preferred)
         # if user is on mobile, each tag will be put on a new line, to make it easier to read
         mobile = ctx.author.mobile_status != discord.Status.offline  # type: ignore
 

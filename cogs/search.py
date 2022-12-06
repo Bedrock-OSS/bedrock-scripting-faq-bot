@@ -93,6 +93,10 @@ class Search(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
+        print(
+            f'loaded {__name__}.{__class__.__name__} on server(s) {ids.servers}'
+        )
+
         self.config = await ConfigUtil.create(Consts.CONFIG_PATH)
 
         self.algolia = AlgoliaUtil(
