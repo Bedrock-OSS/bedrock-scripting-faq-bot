@@ -51,11 +51,12 @@ class Faq(commands.Cog):
                 color=discord.Color.blurple(),
             )
             embed.set_thumbnail(url=img if (img := faq.image) else '')
-            embed.timestamp = datetime.datetime.fromtimestamp(faq.modification_time)
+            if(faq.modification_time != 0):
+                embed.timestamp = datetime.datetime.fromtimestamp(faq.modification_time)
+                embed.set_footer(text="Last updated:")
 
         # embed.set_footer(text=Texts.EMBED_FOOTER.format(
         #     self.bot.user.name))  # type: ignore
-        embed.set_footer(text="Last updated:")
 
         return embed
 
