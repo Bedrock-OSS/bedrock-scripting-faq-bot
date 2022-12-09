@@ -34,7 +34,7 @@ def create_manage_embed(title: str, success: bool,
     # embed.set_footer(text=Texts.EMBED_FOOTER.format(
     #     bot.user.name))  # type: ignore
     embed.set_footer(text="Last updated:")
-    embed.timestamp = datetime.datetime.fromtimestamp(entry.modification_time)
+    embed.timestamp = int(discord.utils.utcnow().timestamp())
     return embed
 
 
@@ -149,7 +149,7 @@ class EditFaqModal(FaqModal):
                          title=title,
                          description=description,
                          image=image,
-                         modification_time=datetime.datetime.now().timestamp()))
+                         modification_time=int(discord.utils.utcnow().timestamp())))
             await interaction.response.send_message(embed=embed)
             return
 
