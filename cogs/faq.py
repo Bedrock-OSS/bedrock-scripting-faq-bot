@@ -123,7 +123,7 @@ class Faq(commands.Cog):
         if msg.author.id == self.bot.user.id:  # type: ignore
             return
 
-        if msg.content[0] != '?':
+        if len(msg.content) == 0 or msg.content[0] != '?':
             return
 
         # search tags
