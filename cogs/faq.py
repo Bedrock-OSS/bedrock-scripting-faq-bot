@@ -51,8 +51,8 @@ class Faq(commands.Cog):
             )
             embed.set_thumbnail(url=img if (img := faq.image) else '')
 
-        embed.set_footer(text=Texts.EMBED_FOOTER.format(
-            self.bot.user.name))  # type: ignore
+        # embed.set_footer(text=Texts.EMBED_FOOTER.format(
+        #     self.bot.user.name))  # type: ignore
 
         return embed
 
@@ -160,7 +160,7 @@ class Faq(commands.Cog):
             return
 
         embed = self._create_faq_embed(res[0])  # type: ignore
-        embed.set_author(name='Auto-Support')
+        # embed.set_author(name='Auto-Support')
         ans = await msg.channel.send(embed=embed)
 
         # make faq removable
