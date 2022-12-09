@@ -128,6 +128,7 @@ class FaqUtil:
         entry.title = title
         entry.description = description
         entry.image = image
+        entry.modification_time = discord.utils.utcnow()
 
         await self.save_faq(self.path)
 
