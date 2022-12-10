@@ -43,9 +43,10 @@ def create_bug_embed(bug: str, interaction: discord.Interaction,
 # MODALS
 class BugReportModal(Modal):
 
-    def __init__(self, ids: Ids) -> None:
+    def __init__(self, ids: Ids, bot: discord.Bot) -> None:
         super().__init__(title='Report a Bug')
         self.ids = ids
+        self.bot = bot
 
         self.add_item(
             InputText(style=discord.InputTextStyle.long,
@@ -62,13 +63,18 @@ class BugReportModal(Modal):
         await interaction.response.send_message(embed=user_embed,
                                                 ephemeral=True)
 
-        # send bug to channel
-        for id in self.ids.channels.bug_report:
-            bug_report_channel = interaction.guild.get_channel(  # type: ignore
-                id)
+        # get bug report channel
+        bug_report_guild = self.bot.get_guild(self.ids.bug_report.server)
+        if not bug_report_guild:
+            print('ERROR: could not get bug report guild.')
+            return
 
-            # bug_report_channel is None -> The bug was not reported in this guild
-            # the report will only be sent in the one guild, where the bug was reported
-            if bug_report_channel is None:
-                return
-            await bug_report_channel.send(embed=mod_embed)  # type: ignore
+        bug_report_channel = bug_report_guild.get_channel(
+            self.ids.bug_report.channel)
+
+        if not bug_report_channel:
+            print('ERROR: could not get bug report channel.')
+            return
+
+        # send bug to channel
+        await bug_report_channel.send(embed=mod_embed)  # type: ignore

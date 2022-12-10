@@ -116,6 +116,7 @@ class Faq(commands.Cog):
 
         # load faq file
         self.data = await FaqUtil.create('config/faq.json')
+        self.deleted_data = await FaqUtil.create('config/faq_bin.json')
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
@@ -123,7 +124,7 @@ class Faq(commands.Cog):
         if msg.author.id == self.bot.user.id:  # type: ignore
             return
 
-        if len(msg.content) == 0 or msg.content[0] != '?':
+        if len(msg.content) == 0 or '?' not in msg.content:
             return
 
         # search tags
@@ -134,7 +135,7 @@ class Faq(commands.Cog):
             scorer=fuzz.token_sort_ratio,
         )
 
-        res = [tag[0] for tag in res if tag[1] >= 85]
+        res = [tag[0] for tag in res if tag[1] >= 95]
 
         if len(res) != 1:
             # search titles
@@ -146,7 +147,7 @@ class Faq(commands.Cog):
                 scorer=fuzz.token_set_ratio,
             )
 
-            res = [tag[2] for tag in res if tag[1] >= 65]  # type: ignore
+            res = [tag[2] for tag in res if tag[1] >= 85]  # type: ignore
 
         if len(res) != 1:
             # search descriptions
@@ -158,9 +159,24 @@ class Faq(commands.Cog):
                 scorer=fuzz.token_set_ratio,
             )
 
-            res = [tag[2] for tag in res if tag[1] >= 65]  # type: ignore
+            res = [tag[2] for tag in res if tag[1] >= 75]  # type: ignore
 
         if len(res) != 1:
+            return
+
+        # send emoji to request faq
+        await msg.add_reaction('❓')
+
+        def check_init(reaction: discord.Reaction, user: discord.User):
+            return (user.id == msg.author.id) and (reaction.emoji == '❓') and (
+                reaction.message.id == msg.id)
+
+        try:
+            await self.bot.wait_for('reaction_add',
+                                    timeout=60,
+                                    check=check_init)
+        except Exception:
+            await msg.remove_reaction('❓', self.bot.user)  # type: ignore
             return
 
         embed = self._create_faq_embed(res[0])  # type: ignore
@@ -171,7 +187,7 @@ class Faq(commands.Cog):
 
         await ans.add_reaction('🚫')
 
-        def check(reaction: discord.Reaction, user: discord.User):
+        def check_remove(reaction: discord.Reaction, user: discord.User):
             return (user.id == msg.author.id) and (  # type: ignore
                 reaction.emoji == '🚫') and (  # type: ignore
                     reaction.message.id == ans.id)  # type: ignore
@@ -180,7 +196,7 @@ class Faq(commands.Cog):
             await self.bot.wait_for(
                 'reaction_add',
                 timeout=10,
-                check=check,
+                check=check_remove,
             )
         except Exception:
             await ans.remove_reaction('🚫', self.bot.user)  # type: ignore
@@ -193,7 +209,7 @@ class Faq(commands.Cog):
         'faqmanage',
         'Commands for managing the FAQ',
         guild_ids=ids.servers,
-        default_member_permissions=discord.Permissions(manage_messages=True),
+        # default_member_permissions=discord.Permissions(manage_messages=True),
         checks=[commands.has_any_role(*ids.roles.faq_management).predicate],
     )
 
@@ -207,6 +223,15 @@ class Faq(commands.Cog):
     async def delete(self, ctx: discord.ApplicationContext, tag: str):
         '''Deletes a FAQ by its tag'''
         faq = await self.data.remove_faq(tag)
+
+        if not faq:
+            await ctx.send_response('Could not remove your faq.')
+            return
+
+        # put deleted faq in deleted_data
+        await self.deleted_data.add_faq(faq.tags, faq.title, faq.description,
+                                        faq.image)
+
         await ctx.send_response(f'Removed your faq: `{faq}`')
 
     @faqmanage.command()
@@ -230,7 +255,6 @@ class Faq(commands.Cog):
     faq = discord.SlashCommandGroup(
         'faq',
         'Commands for accessing the FAQ',
-        guild_ids=ids.servers,
     )
 
     @faq.command()

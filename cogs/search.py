@@ -105,9 +105,10 @@ class Search(commands.Cog):
             self.config.data.algolia_index_name,
         )
 
-    wiki = discord.SlashCommandGroup('wiki',
-                                     'Search the wiki',
-                                     guild_ids=ids.servers)
+    wiki = discord.SlashCommandGroup(
+        'wiki',
+        'Search the wiki',
+    )
 
     @wiki.command()
     @discord.option('query', str, description='The query to search for')

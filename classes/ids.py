@@ -21,7 +21,7 @@ class DataRoles:
 
 @dataclass
 class DataChannels:
-    bug_report: int
+    bug_report: int | None = None
 
 
 @dataclass
@@ -29,3 +29,15 @@ class DataEntry:
     server: int
     roles: DataRoles
     channels: DataChannels
+
+
+@dataclass
+class BugReport:
+    server: int
+    channel: int
+
+
+@dataclass
+class IdBase:
+    manage_servers: List[DataEntry]
+    bug_report: BugReport
