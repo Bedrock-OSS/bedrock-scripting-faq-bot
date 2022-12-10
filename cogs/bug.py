@@ -32,7 +32,7 @@ class Bug(commands.Cog):
         # set BUG_REPORT_COOLDOWN
         Bug.BUG_REPORT_COOLDOWN = self.data.data.bug_report_cooldown
 
-    @commands.slash_command(name='bug', guild_ids=ids.servers)
+    @commands.slash_command(name='bug')
     @commands.dynamic_cooldown(
         _bug_report_cooldown,  # type: ignore
         commands.BucketType.user,
@@ -47,7 +47,7 @@ class Bug(commands.Cog):
                 ephemeral=True,
             )
             return
-        await ctx.send_modal(BugReportModal(ids))
+        await ctx.send_modal(BugReportModal(ids, self.bot))
 
     # bug group
     bugmanage = discord.SlashCommandGroup(

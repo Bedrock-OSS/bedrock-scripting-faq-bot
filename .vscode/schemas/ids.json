@@ -1,45 +1,63 @@
 {
-    "title": "An array containing an object for every server this bot has access to",
-    "type": "array",
-    "minItems": 1,
-    "items": {
-        "type": "object",
-        "properties": {
-            "server": {
-                "title": "The server id",
-                "type": "integer"
-            },
-            "roles": {
-                "title": "An object containing the roles in the server",
-                "markdownDescription": "Each entry needs to be structured like: `\"roleName\": roleId`",
-                "description": "Each entry needs to be structured like:\n\"roleName\": roleId",
+    "title": "The base object",
+    "type": "object",
+    "properties": {
+        "manage_servers": {
+            "title": "An array containing an object for every server this bot has access to",
+            "type": "array",
+            "minItems": 1,
+            "items": {
                 "type": "object",
                 "properties": {
-                    "admin": {
+                    "server": {
+                        "title": "The server id",
                         "type": "integer"
                     },
-                    "faq_management": {
-                        "type": "integer"
+                    "roles": {
+                        "title": "An object containing the roles in the server",
+                        "markdownDescription": "Each entry needs to be structured like: `\"roleName\": roleId`",
+                        "description": "Each entry needs to be structured like:\n\"roleName\": roleId",
+                        "type": "object",
+                        "properties": {
+                            "admin": {
+                                "type": "integer"
+                            },
+                            "faq_management": {
+                                "type": "integer"
+                            }
+                        },
+                        "required": ["admin", "faq_management"]
+                    },
+                    "channels": {
+                        "title": "An object containing the channels in the server",
+                        "markdownDescription": "Each entry needs to be structured like: `\"channelName\": channelId`",
+                        "description": "Each entry needs to be structured like:\n\"channelName\": channelId",
+                        "type": "object",
+                        "properties": {},
+                        "additionalProperties": {
+                            "type": "integer"
+                        },
+                        "required": []
                     }
                 },
-                "required": ["admin", "faq_management"]
-            },
-            "channels": {
-                "title": "An object containing the channels in the server",
-                "markdownDescription": "Each entry needs to be structured like: `\"channelName\": channelId`",
-                "description": "Each entry needs to be structured like:\n\"channelName\": channelId",
-                "type": "object",
-                "properties": {
-                    "bug_report": {
-                        "type": "integer"
-                    }
-                },
-                "additionalProperties": {
-                    "type": "integer"
-                },
-                "required": ["bug_report"]
+                "required": ["server", "roles", "channels"]
             }
         },
-        "required": ["server", "roles", "channels"]
-    }
+        "bug_report": {
+            "title": "The server and channel for bug reports",
+            "type": "object",
+            "properties": {
+                "server": {
+                    "title": "The server the bug report channel is in",
+                    "type": "integer"
+                },
+                "channel": {
+                    "title": "The id of the bug report channel",
+                    "type": "integer"
+                }
+            },
+            "required": ["server", "channel"]
+        }
+    },
+    "required": ["manage_servers", "bug_report"]
 }

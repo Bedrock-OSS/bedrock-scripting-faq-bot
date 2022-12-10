@@ -1,22 +1,24 @@
-[
-    {
-        "server": 0,
-        "roles": {
-            "admin": 0,
-            "faq_management": 0
+{
+    "manage_servers": [
+        {
+            "server": 0,
+            "roles": {
+                "admin": 0,
+                "faq_management": 0
+            },
+            "channels": {}
         },
-        "channels": {
-            "bug_report": 0
+        {
+            "server": 0,
+            "roles": {
+                "admin": 0,
+                "faq_management": 0
+            },
+            "channels": {}
         }
-    },
-    {
+    ],
+    "bug_report": {
         "server": 0,
-        "roles": {
-            "admin": 0,
-            "faq_management": 0
-        },
-        "channels": {
-            "bug_report": 0
-        }
+        "channel": 0
     }
-]
+}
