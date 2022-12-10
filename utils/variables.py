@@ -10,6 +10,8 @@ from dataclass_wizard import fromdict
 
 from classes.ids import BugReport, Channels, DataEntry, IdBase, Roles
 
+from discord import ActivityType
+
 
 class Ids:
 
@@ -44,3 +46,15 @@ class Texts:
 @dataclass
 class Consts:
     CONFIG_PATH = 'config/config.json'
+
+
+@dataclass
+class Presences:
+    presences: tuple[tuple[ActivityType, str], ...] = (
+        (ActivityType.watching, 'the chat. For Support, join Bedrock-OSS!'),
+        (ActivityType.watching,
+         "the chat. It's open source! Visit github.com/Bedrock-OSS!"),
+        (ActivityType.watching, '{} servers'),
+        (ActivityType.playing, 'with {} users'),
+        (ActivityType.listening, 'to your commands'),
+    )
