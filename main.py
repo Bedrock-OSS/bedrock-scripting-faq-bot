@@ -1,13 +1,14 @@
 import datetime
 import logging
 import os
+from random import choice
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
 from utils import loader
-from utils.variables import Ids
+from utils.variables import Ids, Presences
 
 # start logging
 logger = logging.getLogger('discord')
@@ -29,6 +30,20 @@ bot = commands.Bot(intents=intents)
 ids = Ids('config/ids.jsonc')
 
 
+@tasks.loop(seconds=20)
+async def change_presence():
+    presence = choice(Presences.presences)
+
+    msg = presence[1]
+    if '{} users' in msg:
+        msg = msg.format(len(bot.users))
+    elif '{} servers' in msg:
+        msg = msg.format(len(bot.guilds))
+
+    await bot.change_presence(
+        activity=discord.Activity(type=presence[0], name=msg))
+
+
 @bot.event
 async def on_ready():
     print('-' * 30)
@@ -39,6 +54,8 @@ async def on_ready():
     print('On server(s):')
     print(ids.servers)
     print('-' * 30)
+
+    change_presence.start()
 
 
 # react on check failure, eg. when the users doesn't have the correct role
