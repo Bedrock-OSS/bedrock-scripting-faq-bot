@@ -2,6 +2,7 @@
 Modals for faq
 '''
 
+import datetime
 import discord
 from discord.ui import InputText, Modal
 
@@ -30,8 +31,10 @@ def create_manage_embed(title: str, success: bool,
     embed.add_field(name="Image-URL",
                     value=img if (img := entry.image) else '*not given*',
                     inline=True)
-    embed.set_footer(text=Texts.EMBED_FOOTER.format(
-        bot.user.name))  # type: ignore
+    # embed.set_footer(text=Texts.EMBED_FOOTER.format(
+    #     bot.user.name))  # type: ignore
+    embed.set_footer(text="Last updated:")
+    embed.timestamp = discord.utils.utcnow()
     return embed
 
 
@@ -106,7 +109,8 @@ class AddFaqModal(FaqModal):
                 FaqEntry(tags=tags,
                          title=title,
                          description=description,
-                         image=image))
+                         image=image,
+                         modification_time=int(datetime.datetime.now().timestamp())))
             await interaction.response.send_message(embed=embed)
             return
 
@@ -144,7 +148,8 @@ class EditFaqModal(FaqModal):
                 FaqEntry(tags=tags,
                          title=title,
                          description=description,
-                         image=image))
+                         image=image,
+                         modification_time=int(discord.utils.utcnow().timestamp())))
             await interaction.response.send_message(embed=embed)
             return
 

@@ -1,3 +1,4 @@
+import datetime
 import math
 
 import discord
@@ -50,9 +51,12 @@ class Faq(commands.Cog):
                 color=discord.Color.blurple(),
             )
             embed.set_thumbnail(url=img if (img := faq.image) else '')
+            if(faq.modification_time != 0):
+                embed.timestamp = datetime.datetime.fromtimestamp(faq.modification_time)
+                embed.set_footer(text="Last updated:")
 
-        embed.set_footer(text=Texts.EMBED_FOOTER.format(
-            self.bot.user.name))  # type: ignore
+        # embed.set_footer(text=Texts.EMBED_FOOTER.format(
+        #     self.bot.user.name))  # type: ignore
 
         return embed
 
@@ -119,7 +123,7 @@ class Faq(commands.Cog):
         if msg.author.id == self.bot.user.id:  # type: ignore
             return
 
-        if '?' not in msg.content:
+        if len(msg.content) == 0 or msg.content[0] != '?':
             return
 
         # search tags
@@ -160,7 +164,7 @@ class Faq(commands.Cog):
             return
 
         embed = self._create_faq_embed(res[0])  # type: ignore
-        embed.set_author(name='Auto-Support')
+        # embed.set_author(name='Auto-Support')
         ans = await msg.channel.send(embed=embed)
 
         # make faq removable

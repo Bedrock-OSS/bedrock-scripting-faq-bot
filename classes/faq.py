@@ -8,3 +8,4 @@ class FaqEntry:
     title: str
     description: str | None = None
     image: str | None = None
+    modification_time: int = 0

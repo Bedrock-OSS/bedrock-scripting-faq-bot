@@ -71,7 +71,8 @@ class FaqUtil:
         entry = FaqEntry(tags=[tag.lower() for tag in tags],
                          title=title,
                          description=description,
-                         image=image)
+                         image=image,
+                         modification_time=int(discord.utils.utcnow().timestamp()))
         self.data.append(entry)
 
         # save faq
@@ -128,6 +129,7 @@ class FaqUtil:
         entry.title = title
         entry.description = description
         entry.image = image
+        entry.modification_time = int(discord.utils.utcnow().timestamp())
 
         await self.save_faq(self.path)
 
