@@ -127,6 +127,14 @@ class Faq(commands.Cog):
         if len(msg.content) == 0 or '?' not in msg.content:
             return
 
+        percentages = [95, 85, 75]
+        send_faq_directly = False
+
+        if msg.content.startswith('?'):
+            # ?-command -> percentages are lower and message will be sent directly without emoji
+            percentages = [i - 10 for i in percentages]
+            send_faq_directly = True
+
         # search tags
         res = process.extract(
             msg.content,
@@ -135,7 +143,7 @@ class Faq(commands.Cog):
             scorer=fuzz.token_sort_ratio,
         )
 
-        res = [tag[0] for tag in res if tag[1] >= 95]
+        res = [tag[0] for tag in res if tag[1] >= percentages[0]]
 
         if len(res) != 1:
             # search titles
@@ -147,7 +155,8 @@ class Faq(commands.Cog):
                 scorer=fuzz.token_set_ratio,
             )
 
-            res = [tag[2] for tag in res if tag[1] >= 85]  # type: ignore
+            res = [tag[2] for tag in res
+                   if tag[1] >= percentages[1]]  # type: ignore
 
         if len(res) != 1:
             # search descriptions
@@ -159,25 +168,27 @@ class Faq(commands.Cog):
                 scorer=fuzz.token_set_ratio,
             )
 
-            res = [tag[2] for tag in res if tag[1] >= 75]  # type: ignore
+            res = [tag[2] for tag in res
+                   if tag[1] >= percentages[2]]  # type: ignore
 
         if len(res) != 1:
             return
 
-        # send emoji to request faq
-        await msg.add_reaction('❓')
+        if not send_faq_directly:
+            # send emoji to request faq
+            await msg.add_reaction('❓')
 
-        def check_init(reaction: discord.Reaction, user: discord.User):
-            return (user.id == msg.author.id) and (reaction.emoji == '❓') and (
-                reaction.message.id == msg.id)
+            def check_init(reaction: discord.Reaction, user: discord.User):
+                return (user.id == msg.author.id) and (
+                    reaction.emoji == '❓') and (reaction.message.id == msg.id)
 
-        try:
-            await self.bot.wait_for('reaction_add',
-                                    timeout=60,
-                                    check=check_init)
-        except Exception:
-            await msg.remove_reaction('❓', self.bot.user)  # type: ignore
-            return
+            try:
+                await self.bot.wait_for('reaction_add',
+                                        timeout=60,
+                                        check=check_init)
+            except Exception:
+                await msg.remove_reaction('❓', self.bot.user)  # type: ignore
+                return
 
         embed = self._create_faq_embed(res[0])  # type: ignore
         # embed.set_author(name='Auto-Support')
