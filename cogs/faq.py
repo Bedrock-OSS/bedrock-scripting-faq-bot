@@ -156,8 +156,10 @@ class Faq(commands.Cog):
                 scorer=fuzz.token_set_ratio,
             )
 
-            res = [tag[2] for tag in res
-                   if tag[1] >= percentages[1]]  # type: ignore
+            res = [
+                tag[2] for tag in res  # type: ignore
+                if tag[1] >= percentages[1]
+            ]
 
         if len(res) != 1:
             # search descriptions
@@ -169,8 +171,10 @@ class Faq(commands.Cog):
                 scorer=fuzz.token_set_ratio,
             )
 
-            res = [tag[2] for tag in res
-                   if tag[1] >= percentages[2]]  # type: ignore
+            res = [
+                tag[2] for tag in res  # type: ignore
+                if tag[1] >= percentages[2]
+            ]
 
         if len(res) != 1:
             return
