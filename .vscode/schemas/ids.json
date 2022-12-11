@@ -43,21 +43,21 @@
                 "required": ["server", "roles", "channels"]
             }
         },
-        "bug_report": {
-            "title": "The server and channel for bug reports",
+        "feedback": {
+            "title": "The server and channel for feedback",
             "type": "object",
             "properties": {
                 "server": {
-                    "title": "The server the bug report channel is in",
+                    "title": "The server the feedback channel is in",
                     "type": "integer"
                 },
                 "channel": {
-                    "title": "The id of the bug report channel",
+                    "title": "The id of the feedback channel",
                     "type": "integer"
                 }
             },
             "required": ["server", "channel"]
         }
     },
-    "required": ["manage_servers", "bug_report"]
+    "required": ["manage_servers", "feedback"]
 }

@@ -8,7 +8,7 @@ from typing import List
 import json5 as json
 from dataclass_wizard import fromdict
 
-from classes.ids import BugReport, Channels, DataEntry, IdBase, Roles
+from classes.ids import FeedbackReport, Channels, DataEntry, IdBase, Roles
 
 from discord import ActivityType
 
@@ -34,8 +34,8 @@ class Ids:
         # self.channels: Channels = Channels(
         #     bug_report=[i.channels.bug_report for i in data.manage_servers])
 
-        self.bug_report = BugReport(server=data.bug_report.server,
-                                    channel=data.bug_report.channel)
+        self.feedback = FeedbackReport(server=data.feedback.server,
+                                       channel=data.feedback.channel)
 
 
 @dataclass

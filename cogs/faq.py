@@ -27,7 +27,7 @@ class Faq(commands.Cog):
             ctx.value.lower(),
             self.data.get_all_tags(-1),
             limit=10,
-            scorer=fuzz.token_sort_ratio,
+            scorer=fuzz.WRatio,
         )
 
         return [tag[0] for tag in res if tag[1] >= 50]
