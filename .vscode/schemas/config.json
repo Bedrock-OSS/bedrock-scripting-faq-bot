@@ -4,10 +4,10 @@
     "description": "Each entry needs to be structured like:\n\"configName\": configValue",
     "type": "object",
     "properties": {
-        "allow_bug_reports": {
+        "allow_feedback": {
             "type": "boolean"
         },
-        "bug_report_cooldown": {
+        "feedback_cooldown": {
             "type": "integer"
         },
         "algolia_app_id": {
@@ -21,8 +21,8 @@
         }
     },
     "required": [
-        "allow_bug_reports",
-        "bug_report_cooldown",
+        "allow_feedback",
+        "feedback_cooldown",
         "algolia_app_id",
         "algolia_auth_key",
         "algolia_index_name"

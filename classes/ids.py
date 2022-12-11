@@ -10,7 +10,8 @@ class Roles:
 
 @dataclass
 class Channels:
-    bug_report: List[int]
+    ...
+    # bug_report: List[int]
 
 
 @dataclass
@@ -21,7 +22,8 @@ class DataRoles:
 
 @dataclass
 class DataChannels:
-    bug_report: int | None = None
+    ...
+    # bug_report: int | None = None
 
 
 @dataclass
@@ -32,7 +34,7 @@ class DataEntry:
 
 
 @dataclass
-class BugReport:
+class FeedbackReport:
     server: int
     channel: int
 
@@ -40,4 +42,4 @@ class BugReport:
 @dataclass
 class IdBase:
     manage_servers: List[DataEntry]
-    bug_report: BugReport
+    feedback: FeedbackReport

@@ -1,5 +1,5 @@
 '''
-Modals for bug reporting
+Modals for feedback reporting
 '''
 
 from datetime import datetime
@@ -12,10 +12,10 @@ from utils.variables import Texts
 
 
 # EMBEDS
-def create_bug_embed(bug: str, interaction: discord.Interaction,
-                     for_user: bool):
+def create_feedback_embed(feedback: str, interaction: discord.Interaction,
+                          for_user: bool):
     embed = discord.Embed(
-        title='Your bug report was sent!' if for_user else 'New Bug Report',
+        title='Your feedback was sent!' if for_user else 'New Feedback Report',
         color=discord.Color.blurple(),
         timestamp=datetime.now(),
     )
@@ -28,53 +28,54 @@ def create_bug_embed(bug: str, interaction: discord.Interaction,
         )
         embed.add_field(
             name='In Channel',
-            value=interaction.channel.mention,  # type: ignore
+            value=
+            f'`{interaction.guild}` / {interaction.channel.mention}',  # type: ignore
             inline=True,
         )
     else:
         embed.set_author(name="Success!")
 
-    embed.add_field(name='Report', value=bug, inline=False)
+    embed.add_field(name='Report', value=feedback, inline=False)
     embed.set_footer(text=Texts.EMBED_FOOTER.format(
         interaction.client.user.name))  # type: ignore
     return embed
 
 
 # MODALS
-class BugReportModal(Modal):
+class FeedbackModal(Modal):
 
     def __init__(self, ids: Ids, bot: discord.Bot) -> None:
-        super().__init__(title='Report a Bug')
+        super().__init__(title='Send Feedback')
         self.ids = ids
         self.bot = bot
 
         self.add_item(
             InputText(style=discord.InputTextStyle.long,
-                      label='Tell us more about your bug:',
+                      label='Tell us more about your feedback:',
                       required=True))
 
     async def callback(self, interaction: discord.Interaction):
-        bug: str = self.children[0].value  # type: ignore
+        feedback: str = self.children[0].value  # type: ignore
 
-        user_embed = create_bug_embed(bug, interaction, True)
-        mod_embed = create_bug_embed(bug, interaction, False)
+        user_embed = create_feedback_embed(feedback, interaction, True)
+        mod_embed = create_feedback_embed(feedback, interaction, False)
 
         # send confirmation
         await interaction.response.send_message(embed=user_embed,
                                                 ephemeral=True)
 
-        # get bug report channel
-        bug_report_guild = self.bot.get_guild(self.ids.bug_report.server)
-        if not bug_report_guild:
-            print('ERROR: could not get bug report guild.')
+        # get feedback channel
+        feedback_guild = self.bot.get_guild(self.ids.feedback.server)
+        if not feedback_guild:
+            print('ERROR: could not get feedback guild.')
             return
 
-        bug_report_channel = bug_report_guild.get_channel(
-            self.ids.bug_report.channel)
+        feedback_channel = feedback_guild.get_channel(
+            self.ids.feedback.channel)
 
-        if not bug_report_channel:
-            print('ERROR: could not get bug report channel.')
+        if not feedback_channel:
+            print('ERROR: could not get feedback channel.')
             return
 
-        # send bug to channel
-        await bug_report_channel.send(embed=mod_embed)  # type: ignore
+        # send feedback to channel
+        await feedback_channel.send(embed=mod_embed)  # type: ignore

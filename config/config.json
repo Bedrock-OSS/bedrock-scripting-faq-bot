@@ -1,6 +1,6 @@
 {
-    "allow_bug_reports": true,
-    "bug_report_cooldown": 300,
+    "allow_feedback": true,
+    "feedback_cooldown": 300,
     "algolia_app_id": "N9ZHAYJQII",
     "algolia_auth_key": "a664f5a5da631810a08e1a48554fe523",
     "algolia_index_name": "wiki-bedrock"
