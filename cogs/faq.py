@@ -125,23 +125,16 @@ class Faq(commands.Cog):
         if msg.author.id == self.bot.user.id:  # type: ignore
             return
 
-        if len(msg.content) == 0 or '?' not in msg.content:
+        if len(msg.content) == 0 or msg.content[0] != '?':
             return
 
-        percentages = [95, 85, 75]
-        send_faq_directly = False
-
-        if msg.content.startswith('?'):
-            # ?-command -> percentages are lower and message will be sent directly without emoji
-            percentages = [i - 10 for i in percentages]
-            send_faq_directly = True
+        percentages = [85, 75, 65]
 
         # search tags
         res = process.extract(
             msg.content,
             self.data.get_all_tags(-1),
             limit=1,
-            scorer=fuzz.token_sort_ratio,
         )
 
         res = [tag[0] for tag in res if tag[1] >= percentages[0]]
@@ -153,7 +146,6 @@ class Faq(commands.Cog):
                 {i.tags[0]: i.title
                  for i in self.data.data},
                 limit=1,
-                scorer=fuzz.token_set_ratio,
             )
 
             res = [
@@ -168,7 +160,6 @@ class Faq(commands.Cog):
                 {i.tags[0]: i.description
                  for i in self.data.data},
                 limit=1,
-                scorer=fuzz.token_set_ratio,
             )
 
             res = [
@@ -178,22 +169,6 @@ class Faq(commands.Cog):
 
         if len(res) != 1:
             return
-
-        if not send_faq_directly:
-            # send emoji to request faq
-            await msg.add_reaction('❓')
-
-            def check_init(reaction: discord.Reaction, user: discord.User):
-                return (user.id == msg.author.id) and (
-                    reaction.emoji == '❓') and (reaction.message.id == msg.id)
-
-            try:
-                await self.bot.wait_for('reaction_add',
-                                        timeout=60,
-                                        check=check_init)
-            except Exception:
-                await msg.remove_reaction('❓', self.bot.user)  # type: ignore
-                return
 
         embed = self._create_faq_embed(res[0])  # type: ignore
         # embed.set_author(name='Auto-Support')
@@ -235,7 +210,7 @@ class Faq(commands.Cog):
         await ctx.send_modal(AddFaqModal(self.data))
 
     @faqmanage.command()
-    @discord.option('tag', str, description='The tag of the faq to delete')
+    @discord.option('tag', str, description='The tag of the faq to delete', autocomplete=_get_tags_autocomplete)
     async def delete(self, ctx: discord.ApplicationContext, tag: str):
         '''Deletes a FAQ by its tag'''
         faq = await self.data.remove_faq(tag)
@@ -251,6 +226,7 @@ class Faq(commands.Cog):
         await ctx.send_response(f'Removed your faq: `{faq}`')
 
     @faqmanage.command()
+    @discord.option('tag', autocomplete=_get_tags_autocomplete)
     async def edit(self, ctx: discord.ApplicationContext, tag: str):
         '''Edits a FAQ by its tag'''
         entry = self.data.get_faq(tag)
